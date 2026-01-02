@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dr. Beyza TUS Kampı 🩺</title>
+    
+    <!-- PWA & IOS AYARLARI -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FFF1F2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TUS Kampı">
+    <link rel="apple-touch-icon" href="icon.png">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Quicksand:wght@500;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Chart.js (Grafik İçin) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Nunito', 'sans-serif'], 
+                        display: ['Quicksand', 'sans-serif'],
+                        hand: ['Patrick Hand', 'cursive']
+                    },
+                    colors: { pastel: { pink: '#FCE7F3', darkPink: '#EC4899', purple: '#E9D5FF', teal: '#CCFBF1', darkTeal: '#14B8A6' } }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #FFF1F2; -webkit-tap-highlight-color: transparent; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.6); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #F472B6; border-radius: 10px; }
+        .task-checkbox:checked + span { text-decoration: line-through; color: #9CA3AF; }
+        .btn-pop:active { transform: scale(0.95); }
+        
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; font-family: 'Quicksand', sans-serif; font-weight: bold; font-size: 0.9rem; }
+        .calendar-day:hover:not(.empty) { background-color: #FCE7F3; color: #DB2777; }
+        .calendar-day.selected { background-color: #EC4899 !important; color: white !important; }
+        .calendar-day.today { border: 2px solid #14B8A6; color: #14B8A6; }
+        
+        .roadmap-item { transition: all 0.3s ease; border-left: 4px solid transparent; }
+        .roadmap-item:hover { transform: translateX(4px); }
+        .roadmap-item.completed { opacity: 0.6; background-color: #F9FAFB; }
+        .roadmap-item.active { border-left-color: #EC4899; background-color: #FDF2F8; }
+        .roadmap-date { font-size: 0.75rem; font-weight: 700; color: #9CA3AF; letter-spacing: 0.05em; }
+
+        @media (orientation: landscape) {
+            .main-grid { grid-template-columns: 1fr 1fr; }
+            .timer-section { min-height: auto; }
+        }
+    </style>
+</head>
+<body class="text-gray-700 min-h-screen flex flex-col items-center p-4 sm:p-6 pb-20">
+
+    <audio id="silentAudio" loop>
+        <source src="data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//oeAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjkxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASCC8iEAAAAA//oeZAAAAABzsAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//" type="audio/mpeg">
+    </audio>
+
+    <!-- Header -->
+    <header class="w-full max-w-6xl flex flex-col items-center mb-4 mt-2 animate-fade-in-down">
+        <h1 class="font-hand text-5xl sm:text-6xl font-bold text-pink-600 mb-2 text-center tracking-wide">
+            <i class="fa-solid fa-stethoscope mr-2 text-4xl"></i>Dr. Beyza TUS Kampı
+        </h1>
+        <div class="flex gap-3">
+            <div class="bg-white px-5 py-2 rounded-full shadow-sm text-pink-500 font-semibold text-sm border border-pink-100 flex items-center gap-2">
+                <i class="fa-regular fa-clock text-teal-500"></i>
+                15 Mart 2026'ya: <span id="countdownDisplay" class="font-bold text-pink-600 ml-1">...</span>
+            </div>
+            <button id="openNotesBtn" class="bg-white px-5 py-2 rounded-full shadow-sm text-purple-500 font-semibold text-sm border border-purple-100 flex items-center gap-2 hover:bg-purple-50 transition-colors">
+                <i class="fa-solid fa-book-medical"></i> Notlarım
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Grid -->
+    <main class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-6 main-grid">
+        
+        <!-- LEFT COLUMN: Timer & Stats -->
+        <div class="space-y-6">
+            
+            <!-- TIMER CARD -->
+            <div class="glass-card rounded-[2.5rem] p-6 shadow-xl relative overflow-hidden flex flex-col items-center justify-center min-h-[280px] timer-section">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-300 via-purple-300 to-teal-300"></div>
+                
+                <div id="modeBadge" class="mb-2 px-4 py-1 rounded-full text-sm font-bold bg-pink-100 text-pink-500 uppercase tracking-widest hidden">
+                    ÇALIŞMA MODU
+                </div>
+
+                <div class="text-7xl sm:text-9xl font-display font-bold text-gray-800 tracking-wider mb-6 drop-shadow-sm tabular-nums" id="timerDisplay">
+                    00:00
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <button id="stopTimerBtn" class="hidden w-12 h-12 rounded-full bg-red-50 text-red-400 hover:bg-red-100 flex items-center justify-center transition-all hover:scale-105" title="Bitir">
+                        <i class="fa-solid fa-stop"></i>
+                    </button>
+                    <button id="toggleTimerBtn" class="btn-pop group relative inline-flex items-center justify-center px-10 py-3 font-bold text-white text-xl transition-all duration-300 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full focus:outline-none hover:shadow-xl hover:shadow-pink-200 hover:-translate-y-1">
+                        <span id="btnIcon" class="mr-3"><i class="fa-solid fa-play"></i></span>
+                        <span id="btnText">Başlat</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats & Chart -->
+            <div class="glass-card rounded-[2rem] p-6 shadow-lg border-l-8 border-teal-400">
+                <div class="flex justify-between items-end mb-2">
+                    <h3 class="font-display text-xl font-bold text-teal-700">Günlük İstatistik</h3>
+                    <span id="currentDateDisplay" class="text-sm text-gray-400 font-semibold bg-white px-3 py-1 rounded-full">...</span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mt-2 mb-2">
+                    <!-- Hedef -->
+                    <div class="bg-teal-50 p-3 rounded-2xl text-center border border-teal-100 flex flex-col justify-center">
+                        <p class="text-xs text-teal-600 uppercase font-bold tracking-wider mb-1">Hedef</p>
+                        <div class="flex items-center justify-center">
+                            <input type="number" id="targetInput" class="w-12 text-center bg-transparent text-xl font-bold text-teal-600 focus:outline-none border-b border-teal-200" value="8">
+                            <span class="text-sm text-teal-600 ml-1 font-bold">saat</span>
+                        </div>
+                    </div>
+                    <!-- Gerçekleşen (Saniye Ekli & Yüzde Ekli) -->
+                    <div class="bg-pink-50 p-3 rounded-2xl text-center border border-pink-100 relative flex flex-col justify-center">
+                        <p class="text-xs text-pink-600 uppercase font-bold tracking-wider mb-1">Gerçekleşen</p>
+                        <p class="text-lg font-bold text-pink-600 tabular-nums flex items-center justify-center" id="formattedWorkedTime">
+                            0 sa 0 dk <span class="text-xs text-pink-400 ml-1">00 sn</span>
+                        </p>
+                        <!-- YENİ YÜZDE GÖSTERGESİ -->
+                        <p id="percentageText" class="text-xs font-bold text-teal-600 mt-1">%0 Hedefe Ulaşıldı</p>
+                        
+                        <div id="workingIndicator" class="hidden absolute top-3 right-3 w-2 h-2 bg-pink-500 rounded-full animate-ping"></div>
+                    </div>
+                </div>
+
+                <!-- PROGRESS BAR -->
+                <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden mb-4">
+                    <div id="progressBar" class="bg-gradient-to-r from-teal-300 to-teal-500 h-2.5 rounded-full transition-all duration-700 ease-out" style="width: 0%"></div>
+                </div>
+
+                <!-- HAFTALIK GRAFİK (MAX 8 SAAT SABİT) -->
+                <div class="h-48 w-full relative">
+                    <canvas id="weeklyChart"></canvas>
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Tasks & Plan -->
+        <div class="space-y-6">
+            <!-- Navigation -->
+            <div class="glass-card rounded-[2rem] p-4 shadow-md grid grid-cols-[auto_1fr_auto] gap-2 items-center">
+                <button id="prevDay" class="w-10 h-10 rounded-full bg-white text-gray-400 hover:text-pink-500 hover:shadow transition-all"><i class="fa-solid fa-chevron-left"></i></button>
+                <div class="flex gap-2 justify-center">
+                    <div class="text-center cursor-pointer hover:bg-pink-50 px-4 py-2 rounded-2xl transition-all group" id="openCalendarBtn">
+                        <h3 id="selectedDateHeader" class="font-display font-bold text-gray-800 text-lg group-hover:text-pink-600 leading-none">Bugün</h3>
+                        <div class="text-pink-400 text-xs font-semibold" id="selectedDateSub">...</div>
+                    </div>
+                    <button id="openRoadmapBtn" class="flex flex-col items-center justify-center px-4 py-2 rounded-2xl hover:bg-teal-50 group transition-all">
+                        <i class="fa-solid fa-map text-teal-500 text-lg group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[10px] font-bold text-teal-600 uppercase tracking-wide mt-1">Plan</span>
+                    </button>
+                </div>
+                <button id="nextDay" class="w-10 h-10 rounded-full bg-white text-gray-400 hover:text-pink-500 hover:shadow transition-all"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+
+            <!-- Tasks -->
+            <div class="glass-card rounded-[2rem] p-8 shadow-xl min-h-[400px] flex flex-col relative">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-display font-bold text-2xl text-gray-700">Görevler</h3>
+                    <span id="taskCount" class="text-xs bg-pink-100 text-pink-600 px-3 py-1 rounded-full font-bold">0</span>
+                </div>
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="newTaskInput" placeholder="Yeni görev ekle..." class="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-pink-300 outline-none shadow-inner text-gray-700">
+                    <button id="addTaskBtn" class="bg-pink-500 hover:bg-pink-600 text-white w-10 h-10 rounded-xl shadow-lg transition-all flex items-center justify-center transform hover:-translate-y-1">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+                <ul id="taskList" class="flex-1 space-y-2 overflow-y-auto max-h-[400px] pr-2 custom-scroll">
+                    <li class="text-center text-gray-400 text-sm mt-10">Veriler yükleniyor...</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODALS -->
+    
+    <!-- 1. Notes Modal -->
+    <div id="notesModal" class="fixed inset-0 z-50 flex items-center justify-center bg-purple-900 bg-opacity-30 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl h-[85vh] m-4 transform scale-95 transition-transform duration-300 flex flex-col" id="notesContent">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-[2rem]">
+                <div>
+                    <h3 class="font-display font-bold text-2xl text-gray-800">TUS Notlarım</h3>
+                    <p class="text-xs text-purple-500 font-semibold mt-1">Önemli sayfalar ve notlar (DB)</p>
+                </div>
+                <button id="closeNotes" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-400 transition-colors"><i class="fa-solid fa-xmark fa-lg"></i></button>
+            </div>
+            
+            <div class="p-4 bg-purple-50 border-b border-purple-100">
+                <div class="flex gap-2 mb-2">
+                    <input type="text" id="noteTitleInput" placeholder="Notun adı (Örn: Dahiliye Özet)" class="flex-1 p-3 rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm">
+                    <label class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl cursor-pointer flex items-center justify-center shadow-md transition-all">
+                        <i class="fa-solid fa-camera mr-2"></i> Ekle
+                        <input type="file" id="noteFileInput" accept="image/*" class="hidden">
+                    </label>
+                </div>
+                <div id="uploadProgress" class="hidden w-full bg-gray-200 rounded-full h-2.5">
+                    <div class="bg-purple-600 h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+                <div class="mt-2">
+                    <input type="text" id="noteSearchInput" placeholder="Notlarda ara..." class="w-full p-2 bg-white rounded-lg border border-gray-200 text-sm focus:outline-none">
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4 custom-scroll bg-gray-50">
+                <div id="notesGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div class="col-span-full text-center text-gray-400 mt-10">Henüz not yüklenmedi.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Timer Setup Modal -->
+    <div id="timerSetupModal" class="fixed inset-0 z-50 flex items-center justify-center bg-pink-900 bg-opacity-30 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-[2.5rem] shadow-2xl p-8 w-full max-w-lg m-4 transform scale-95 transition-transform duration-300" id="setupContent">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-display font-bold text-2xl text-gray-800">Süre Seçimi</h3>
+                <button id="closeSetup" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 transition-colors"><i class="fa-solid fa-xmark fa-lg"></i></button>
+            </div>
+            <div class="space-y-6">
+                <div class="flex p-1 bg-gray-100 rounded-xl mb-4">
+                    <button class="flex-1 py-2 rounded-lg text-sm font-bold transition-all text-pink-600 bg-white shadow-sm" id="tabWork" onclick="window.app.switchTab('work')">Ders Çalış</button>
+                    <button class="flex-1 py-2 rounded-lg text-sm font-bold transition-all text-gray-500 hover:text-teal-600" id="tabBreak" onclick="window.app.switchTab('break')">Mola Ver</button>
+                </div>
+                <div id="workOptions" class="grid grid-cols-3 gap-3">
+                    <button onclick="window.app.startSession(25, 'work')" class="btn-pop py-4 bg-pink-50 hover:bg-pink-500 hover:text-white rounded-2xl text-pink-600 font-bold text-lg transition-colors border border-pink-100">25 dk</button>
+                    <button onclick="window.app.startSession(45, 'work')" class="btn-pop py-4 bg-pink-50 hover:bg-pink-500 hover:text-white rounded-2xl text-pink-600 font-bold text-lg transition-colors border border-pink-100">45 dk</button>
+                    <button onclick="window.app.startSession(60, 'work')" class="btn-pop py-4 bg-pink-50 hover:bg-pink-500 hover:text-white rounded-2xl text-pink-600 font-bold text-lg transition-colors border border-pink-100">60 dk</button>
+                </div>
+                <div id="breakOptions" class="grid grid-cols-4 gap-3 hidden">
+                    <button onclick="window.app.startSession(5, 'break')" class="btn-pop py-3 bg-teal-50 hover:bg-teal-500 hover:text-white rounded-2xl text-teal-600 font-bold transition-colors border border-teal-100">5</button>
+                    <button onclick="window.app.startSession(10, 'break')" class="btn-pop py-3 bg-teal-50 hover:bg-teal-500 hover:text-white rounded-2xl text-teal-600 font-bold transition-colors border border-teal-100">10</button>
+                    <button onclick="window.app.startSession(15, 'break')" class="btn-pop py-3 bg-teal-50 hover:bg-teal-500 hover:text-white rounded-2xl text-teal-600 font-bold transition-colors border border-teal-100">15</button>
+                    <button onclick="window.app.startSession(20, 'break')" class="btn-pop py-3 bg-teal-50 hover:bg-teal-500 hover:text-white rounded-2xl text-teal-600 font-bold transition-colors border border-teal-100">20</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Action Modal -->
+    <div id="actionModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-[2.5rem] shadow-2xl p-8 w-full max-w-sm m-4 transform scale-95 transition-transform duration-300 text-center" id="actionContent">
+            <div class="mb-6">
+                <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4 text-pink-500 text-2xl animate-bounce"><i class="fa-solid fa-trophy"></i></div>
+                <h3 class="font-display font-bold text-2xl text-gray-800 mb-2">Süre Bitti! 🎉</h3>
+                <p class="text-gray-500 text-sm" id="actionMessage">Sırada ne var?</p>
+            </div>
+            <div class="space-y-3">
+                <button onclick="window.app.quickAction('work')" class="w-full py-4 bg-pink-500 text-white rounded-2xl font-bold shadow-lg hover:-translate-y-1 transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-brain"></i> Çalışmaya Devam Et</button>
+                <button onclick="window.app.quickAction('break')" class="w-full py-4 bg-teal-50 text-teal-600 border border-teal-100 rounded-2xl font-bold hover:bg-teal-100 transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-mug-hot"></i> Mola Ver</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Calendar Modal -->
+    <div id="calendarModal" class="fixed inset-0 z-50 flex items-center justify-center bg-pink-900 bg-opacity-20 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-[2.5rem] shadow-2xl p-6 w-full max-w-sm m-4 transform scale-90 transition-transform duration-300" id="calendarContent">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-display font-bold text-xl text-gray-800" id="calMonthYear">...</h3>
+                <div class="flex gap-2">
+                    <button id="calPrevMonth" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button id="calNextMonth" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"><i class="fa-solid fa-chevron-right"></i></button>
+                    <button id="closeCalendar" class="ml-2 text-red-400 hover:bg-red-50 w-8 h-8 rounded-full"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            <div class="grid grid-cols-7 gap-1 mb-2 text-center text-xs font-bold text-gray-400"><span>Pt</span><span>Sa</span><span>Ça</span><span>Pe</span><span>Cu</span><span>Ct</span><span class="text-pink-400">Pa</span></div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <button id="jumpToTodayBtn" class="w-full mt-4 bg-teal-50 text-teal-600 py-2 rounded-xl font-bold text-sm hover:bg-teal-100">Bugüne Dön</button>
+        </div>
+    </div>
+    
+    <!-- 5. Roadmap Modal -->
+    <div id="roadmapModal" class="fixed inset-0 z-50 flex items-center justify-center bg-pink-900 bg-opacity-30 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-xl h-[80vh] m-4 transform scale-95 transition-transform duration-300 flex flex-col" id="roadmapContent">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-[2rem] sticky top-0 z-10">
+                <div><h3 class="font-display font-bold text-2xl text-gray-800">TUS Yol Haritası</h3><p class="text-xs text-pink-500 font-semibold mt-1">Sınav Hedefi: 14 Mart 2026</p></div>
+                <button id="closeRoadmap" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-400 transition-colors"><i class="fa-solid fa-xmark fa-lg"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 custom-scroll"><ul id="roadmapList" class="space-y-4"><li class="text-center text-gray-400">Plan yükleniyor...</li></ul></div>
+            <div class="p-4 bg-gray-50 rounded-b-[2rem] text-center text-xs text-gray-400">*Tarihler otomatik hesaplanmıştır.</div>
+        </div>
+    </div>
+
+    <!-- LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, onValue, push, update, remove, increment, set, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        // 🔥 FIREBASE CONFIG (KENDİ BİLGİLERİNİ KONTROL ET) 🔥
+        const firebaseConfig = {
+            apiKey: "AIzaSyB4hWpRAQe5QXsN2ZjQ-q8aaLSxE3ESJU8",
+            authDomain: "beyzatussayac-25cf4.firebaseapp.com",
+            databaseURL: "https://beyzatussayac-25cf4-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "beyzatussayac-25cf4",
+            storageBucket: "beyzatussayac-25cf4.firebasestorage.app",
+            messagingSenderId: "67198873766",
+            appId: "1:67198873766:web:2660035a2228a186a28467",
+            measurementId: "G-5FBWYVP88V"
+        };
+
+        let app, db;
+        try { 
+            app = initializeApp(firebaseConfig); 
+            db = getDatabase(app); 
+        } 
+        catch (e) { console.error(e); alert("Firebase Hatası! Console'u kontrol et."); }
+
+        if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Hata:', err))); }
+
+        // --- MEDIA SESSION & NOTIFICATIONS ---
+        const silentAudio = document.getElementById('silentAudio');
+        let wakeLock = null;
+        const requestWakeLock = async () => { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) { console.log(err); } };
+        const updateLockScreen = (timeLeft, mode) => {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({ title: `Kalan: ${timeLeft}`, artist: mode === 'work' ? "Ders Çalışıyor 🧠" : "Mola ☕", album: "Dr. Beyza TUS", artwork: [{ src: 'icon.png', sizes: '512x512', type: 'image/png' }] });
+                navigator.mediaSession.playbackState = "playing";
+            }
+        };
+        const requestNotificationPermission = async () => { if (!("Notification" in window)) return; if (Notification.permission === "default") await Notification.requestPermission(); };
+        const sendNotification = (title, body) => { if (Notification.permission === "granted") new Notification(title, { body: body, icon: "icon.png", tag: "tus-camp" }); };
+        const workDoneMessages = ["Harikasın Doktor! 🩺", "Bu azimle TUS derecesi geliyor! 🌟", "Dinlenme zamanı. ☕", "Beyin kasların gelişiyor! 🧠"];
+        const breakDoneMessages = ["Mola bitti! Hadi masanın başına. 🚀", "Yeterince dinlendik! ⚡", "Uzmanlık seni bekliyor!", "Başlıyoruz! ⏳"];
+        const getRandomMsg = (list) => list[Math.floor(Math.random() * list.length)];
+
+        // UTILS - ESKİ USUL TARİH (VERİ KAYBINI ÖNLEMEK İÇİN)
+        const getLocalISODate = (date = new Date()) => {
+            const offset = date.getTimezoneOffset();
+            const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+            return localDate.toISOString().split('T')[0];
+        };
+        const formatDisplayDate = (d) => new Date(d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
+        const formatShortDate = (d) => new Date(d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+        const formatTimePretty = (totalMinutes) => {
+            const h = Math.floor(totalMinutes / 60);
+            const m = totalMinutes % 60;
+            return h > 0 ? `${h} sa ${m} dk` : `${m} dk`;
+        };
+
+        // STATE
+        const loadState = () => { const saved = localStorage.getItem('tusState'); return saved ? JSON.parse(saved) : { timer: { minutes: 0, seconds: 0, initialMinutes: 0, isRunning: false, isPaused: false, mode: 'idle', secondsBuffered: 0, sessionSeconds: 0, pausedAt: null, endTime: null }, flags: { morningSent: false, nightSent: false, inactiveWarnSent: false } }; };
+        const state = { viewDate: getLocalISODate(), today: getLocalISODate(), ...loadState(), stats: { workedMinutesDB: 0, target: 8 }, calendar: { month: new Date().getMonth(), year: new Date().getFullYear() }, roadmap: [] };
+        const saveState = () => localStorage.setItem('tusState', JSON.stringify({ timer: state.timer, flags: state.flags }));
+
+        // DOM ELEMENTS
+        const els = {
+            timerDisplay: document.getElementById('timerDisplay'), toggleBtn: document.getElementById('toggleTimerBtn'), stopBtn: document.getElementById('stopTimerBtn'),
+            modeBadge: document.getElementById('modeBadge'), progressBar: document.getElementById('progressBar'), progressPercent: document.getElementById('progressPercent'),
+            formattedTime: document.getElementById('formattedWorkedTime'), percentageText: document.getElementById('percentageText'),
+            workingIndicator: document.getElementById('workingIndicator'), targetInput: document.getElementById('targetInput'),
+            taskList: document.getElementById('taskList'), newTaskInput: document.getElementById('newTaskInput'), addTaskBtn: document.getElementById('addTaskBtn'),
+            taskCount: document.getElementById('taskCount'), selectedDateHeader: document.getElementById('selectedDateHeader'), selectedDateSub: document.getElementById('selectedDateSub'),
+            countdownDisplay: document.getElementById('countdownDisplay'),
+            setupModal: document.getElementById('timerSetupModal'), setupContent: document.getElementById('setupContent'), closeSetupBtn: document.getElementById('closeSetup'),
+            actionModal: document.getElementById('actionModal'), actionContent: document.getElementById('actionContent'),
+            calendarModal: document.getElementById('calendarModal'), calendarContent: document.getElementById('calendarContent'), openCalendarBtn: document.getElementById('openCalendarBtn'), closeCalendarBtn: document.getElementById('closeCalendar'),
+            roadmapModal: document.getElementById('roadmapModal'), roadmapContent: document.getElementById('roadmapContent'), openRoadmapBtn: document.getElementById('openRoadmapBtn'), closeRoadmapBtn: document.getElementById('closeRoadmap'), roadmapList: document.getElementById('roadmapList'),
+            tabWork: document.getElementById('tabWork'), tabBreak: document.getElementById('tabBreak'), workOptions: document.getElementById('workOptions'), breakOptions: document.getElementById('breakOptions'),
+            notesModal: document.getElementById('notesModal'), notesContent: document.getElementById('notesContent'), openNotesBtn: document.getElementById('openNotesBtn'), closeNotesBtn: document.getElementById('closeNotes'),
+            noteTitleInput: document.getElementById('noteTitleInput'), noteFileInput: document.getElementById('noteFileInput'), notesGrid: document.getElementById('notesGrid'), noteSearchInput: document.getElementById('noteSearchInput'), uploadProgress: document.getElementById('uploadProgress')
+        };
+
+        // --- CHART JS (GRAFİK - SABİT 8 SAAT MAX) ---
+        let weeklyChartInstance = null;
+        const initChart = () => {
+            const ctx = document.getElementById('weeklyChart').getContext('2d');
+            weeklyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: 'Çalışma (Saat)', data: [], backgroundColor: 'rgba(236, 72, 153, 0.6)', borderColor: 'rgba(236, 72, 153, 1)', borderWidth: 1, borderRadius: 6 }] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        y: { 
+                            beginAtZero: true,
+                            max: 8, // MAX 8 SAAT SABİT
+                            title: { display: true, text: 'Saat' },
+                            ticks: { stepSize: 1 }
+                        } 
+                    }, 
+                    plugins: { legend: { display: false } } 
+                }
+            });
+        };
+        
+        // GRAFİK GÜNCELLEME (Eski Usul Tarih İle)
+        const updateChart = async () => {
+            const labels = []; const data = []; const promises = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(); d.setDate(d.getDate() - i);
+                const dateStr = getLocalISODate(d); // ÖNEMLİ: ESKİ DATE FORMATI
+                labels.push(d.toLocaleDateString('tr-TR', { weekday: 'short' }));
+                const p = get(ref(db, `tus_camp_data/${dateStr}/stats/workedMinutes`)).then(snap => snap.exists() ? (snap.val()/60).toFixed(1) : 0);
+                promises.push(p);
+            }
+            const results = await Promise.all(promises);
+            if (weeklyChartInstance) { weeklyChartInstance.data.labels = labels; weeklyChartInstance.data.datasets[0].data = results; weeklyChartInstance.update(); }
+        };
+
+        // --- TIMER LOGIC ---
+        window.app = {
+            switchTab: (tab) => {
+                if (tab === 'work') { els.tabWork.classList.replace('text-gray-500', 'text-pink-600'); els.tabWork.classList.add('bg-white', 'shadow-sm'); els.tabBreak.classList.replace('text-teal-600', 'text-gray-500'); els.tabBreak.classList.remove('bg-white', 'shadow-sm'); els.workOptions.classList.remove('hidden'); els.breakOptions.classList.add('hidden'); } 
+                else { els.tabWork.classList.replace('text-pink-600', 'text-gray-500'); els.tabWork.classList.remove('bg-white', 'shadow-sm'); els.tabBreak.classList.replace('text-gray-500', 'text-teal-600'); els.tabBreak.classList.add('bg-white', 'shadow-sm'); els.workOptions.classList.add('hidden'); els.breakOptions.classList.remove('hidden'); }
+            },
+            startSession: (mins, mode) => {
+                state.timer.mode = mode; state.timer.initialMinutes = mins; state.timer.isRunning = true; state.timer.isPaused = false; state.timer.pausedAt = null;
+                if (mode === 'break') { state.timer.endTime = Date.now() + (mins * 60000); state.timer.minutes = mins; state.timer.seconds = 0; state.timer.sessionSeconds = 0; }
+                else { state.timer.endTime = null; state.timer.minutes = mins; state.timer.seconds = 0; state.timer.sessionSeconds = 0; }
+                silentAudio.play().catch(e => console.log("Ses izni yok.")); requestWakeLock();
+                closeSetupModal(); updateTimerUI(); runTimer(); saveState();
+            },
+            quickAction: (mode) => { closeActionModal(); if(mode === 'work') { els.tabWork.click(); openSetupModal(); } else { els.tabBreak.click(); openSetupModal(); } },
+            deleteNote: (key) => { if(confirm("Silmek istiyor musun?")) remove(ref(db, `tus_camp_data/notes/${key}`)); }
+        };
+
+        const runTimer = () => {
+            if (state.timer.intervalId) clearInterval(state.timer.intervalId);
+            state.timer.isRunning = true; updatePlayBtnUI(); els.stopBtn.classList.remove('hidden'); silentAudio.play().catch(()=>{}); requestWakeLock();
+            state.timer.intervalId = setInterval(() => {
+                let displayTime = "";
+                if (state.timer.mode === 'break') {
+                    const remaining = state.timer.endTime - Date.now();
+                    if (remaining <= 0) { finishTimer(); return; }
+                    state.timer.minutes = Math.floor(remaining / 60000); state.timer.seconds = Math.floor((remaining % 60000) / 1000);
+                } else {
+                    if (state.timer.seconds === 0) { if (state.timer.minutes === 0) { finishTimer(); return; } state.timer.minutes--; state.timer.seconds = 59; } else { state.timer.seconds--; }
+                    state.timer.secondsBuffered++; state.timer.sessionSeconds++;
+                    if (state.timer.secondsBuffered >= 60) { incrementWorkedMinutesInFirebase(); state.timer.secondsBuffered = 0; }
+                }
+                displayTime = `${state.timer.minutes.toString().padStart(2, '0')}:${state.timer.seconds.toString().padStart(2, '0')}`;
+                updateTimerUI(); saveState(); updateLockScreen(displayTime, state.timer.mode);
+            }, 1000);
+        };
+
+        const pauseTimer = () => { state.timer.isRunning = false; state.timer.pausedAt = new Date(); clearInterval(state.timer.intervalId); updatePlayBtnUI(); if(state.timer.mode === 'work') els.workingIndicator.classList.add('hidden'); if ('mediaSession' in navigator) navigator.mediaSession.metadata.title = "Duraklatıldı ⏸️"; silentAudio.pause(); saveState(); };
+        const stopSession = () => { if(confirm("Bitirmek istiyor musun?")) { openActionModal(); pauseTimer(); state.timer.minutes = 0; state.timer.seconds = 0; updateTimerUI(); saveState(); } };
+        const finishTimer = () => { pauseTimer(); const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg'); audio.play().catch(e=>{}); state.timer.isPaused = false; state.timer.minutes = 0; state.timer.seconds = 0; state.timer.pausedAt = null; state.timer.endTime = null; updateTimerUI(); saveState(); const title = state.timer.mode === 'work' ? "Mola Zamanı! ☕" : "Ders Zamanı! 📚"; const body = state.timer.mode === 'work' ? getRandomMsg(workDoneMessages) : getRandomMsg(breakDoneMessages); sendNotification(title, body); openActionModal(); els.modeBadge.classList.add('hidden'); };
+
+        const updateTimerUI = () => {
+            const m = state.timer.minutes.toString().padStart(2, '0'); const s = state.timer.seconds.toString().padStart(2, '0');
+            els.timerDisplay.innerText = `${m}:${s}`; document.title = state.timer.isRunning ? `(${m}:${s}) ${state.timer.mode==='work'?'Çalışıyor':'Mola'}` : "TUS Kampı";
+            if (state.timer.mode === 'work') { els.modeBadge.innerText = "ÇALIŞMA MODU"; els.modeBadge.className = "mb-4 px-4 py-1 rounded-full text-sm font-bold bg-pink-100 text-pink-500 uppercase tracking-widest"; els.workingIndicator.classList.remove('hidden'); } 
+            else if (state.timer.mode === 'break') { els.modeBadge.innerText = "MOLA MODU ☕"; els.modeBadge.className = "mb-4 px-4 py-1 rounded-full text-sm font-bold bg-teal-100 text-teal-600 uppercase tracking-widest"; els.workingIndicator.classList.add('hidden'); } else { els.stopBtn.classList.add('hidden'); }
+            
+            // GÜNCEL İSTATİSTİK GÖSTERİMİ
+            if(state.timer.mode === 'work' || !state.timer.isRunning) {
+                const totalMins = state.stats.workedMinutesDB;
+                const sessionSecs = state.timer.sessionSeconds;
+                const pretty = formatTimePretty(totalMins);
+                els.formattedTime.innerHTML = `${pretty} <span class="text-xs text-pink-400 ml-1">${(sessionSecs % 60).toString().padStart(2,'0')} sn</span>`;
+                
+                const pct = Math.min(100, Math.round((totalMins / (state.stats.target * 60)) * 100)) || 0;
+                
+                // YÜZDE GÖSTERGESİ (YENİ)
+                els.percentageText.innerText = `%${pct} Hedefe Ulaşıldı`;
+                els.progressBar.style.width = `${pct}%`; 
+                if(pct>=100) els.progressBar.classList.add('from-green-400', 'to-green-600');
+            }
+        };
+
+        const updatePlayBtnUI = () => {
+            const baseClass = "btn-pop group relative inline-flex items-center justify-center px-10 py-4 font-bold text-white text-xl transition-all duration-300 rounded-full hover:shadow-xl hover:-translate-y-1 focus:outline-none";
+            if (state.timer.isRunning) { document.getElementById('btnText').innerText = "Duraklat"; document.getElementById('btnIcon').innerHTML = '<i class="fa-solid fa-pause"></i>'; els.toggleBtn.className = `${baseClass} bg-gradient-to-r from-amber-400 to-orange-400 hover:shadow-orange-200`; } 
+            else { document.getElementById('btnText').innerText = (state.timer.isPaused || state.timer.minutes > 0) ? "Devam Et" : "Başlat"; document.getElementById('btnIcon').innerHTML = '<i class="fa-solid fa-play"></i>'; els.toggleBtn.className = `${baseClass} bg-gradient-to-r from-pink-500 to-purple-500 hover:shadow-pink-200`; }
+        };
+
+        const handleMainButton = () => { if (Notification.permission === "default") requestNotificationPermission(); if (state.timer.isRunning) { pauseTimer(); return; } if (state.timer.isPaused || state.timer.minutes > 0) { runTimer(); return; } openSetupModal(); };
+        const incrementWorkedMinutesInFirebase = () => { update(ref(db, `tus_camp_data/${getLocalISODate()}/stats`), { workedMinutes: increment(1) }).then(() => { state.timer.sessionSeconds = Math.max(0, state.timer.sessionSeconds - 60); saveState(); }).catch((error) => { console.error(error); pauseTimer(); }); };
+        
+        // --- NOTES (BASE64) ---
+        const compressImage = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader(); reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image(); img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+                        const MAX_WIDTH = 800; const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize;
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                    }; img.onerror = (e) => reject(e);
+                }; reader.onerror = (e) => reject(e);
+            });
+        };
+
+        const openNotes = () => { els.notesModal.classList.remove('hidden'); setTimeout(() => { els.notesModal.classList.replace('opacity-0', 'opacity-100'); els.notesContent.classList.replace('scale-95', 'scale-100'); }, 10); };
+        const closeNotes = () => { els.notesModal.classList.replace('opacity-100', 'opacity-0'); els.notesContent.classList.replace('scale-100', 'scale-95'); setTimeout(() => els.notesModal.classList.add('hidden'), 300); };
+        
+        const uploadNote = async (e) => {
+            const file = e.target.files[0]; const title = els.noteTitleInput.value.trim() || "Adsız Not";
+            if (!file) return; els.uploadProgress.classList.remove('hidden'); els.uploadProgress.firstElementChild.style.width = '30%';
+            try {
+                const base64Img = await compressImage(file); els.uploadProgress.firstElementChild.style.width = '70%';
+                await push(ref(db, 'tus_camp_data/notes'), { title: title, image: base64Img, createdAt: Date.now() });
+                els.uploadProgress.firstElementChild.style.width = '100%'; setTimeout(() => els.uploadProgress.classList.add('hidden'), 1000);
+                els.noteTitleInput.value = ""; alert("Not yüklendi! ✅");
+            } catch (error) { console.error(error); alert("Hata: Resim yüklenemedi."); }
+        };
+
+        const listenToNotes = () => {
+            onValue(ref(db, 'tus_camp_data/notes'), (snapshot) => {
+                const notes = snapshot.val(); els.notesGrid.innerHTML = "";
+                if(!notes) { els.notesGrid.innerHTML = '<div class="col-span-full text-center text-gray-400 mt-10">Henüz not yok.</div>'; return; }
+                Object.entries(notes).reverse().forEach(([key, note]) => {
+                    const div = document.createElement('div'); div.className = "bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col note-card";
+                    div.innerHTML = `<div class="h-32 bg-gray-100 rounded-lg mb-2 overflow-hidden relative group"><img src="${note.image}" class="w-full h-full object-cover transition-transform group-hover:scale-110 cursor-pointer" onclick="window.open('${note.image}', '_blank')"></div><h4 class="font-bold text-gray-700 text-sm truncate">${note.title}</h4><span class="text-xs text-gray-400">${new Date(note.createdAt).toLocaleDateString('tr-TR')}</span><button class="mt-2 text-xs text-red-400 hover:text-red-600 text-right w-full" onclick="window.app.deleteNote('${key}')">Sil</button>`;
+                    els.notesGrid.appendChild(div);
+                });
+            });
+        };
+
+        els.noteSearchInput.addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            document.querySelectorAll('.note-card').forEach(card => {
+                const title = card.querySelector('h4').innerText.toLowerCase();
+                card.style.display = title.includes(val) ? 'flex' : 'none';
+            });
+        });
+
+        els.openNotesBtn.addEventListener('click', openNotes); els.closeNotesBtn.addEventListener('click', closeNotes);
+        els.noteFileInput.addEventListener('change', uploadNote);
+
+        // DATA LOADING
+        const loadData = (date) => {
+            onValue(ref(db, `tus_camp_data/${date}/stats`), (snap) => {
+                const d = snap.val() || {}; state.stats.workedMinutesDB = d.workedMinutes || 0; state.stats.target = d.targetHours || 8;
+                updateTimerUI(); els.targetInput.value = state.stats.target; updateChart();
+            });
+            onValue(ref(db, `tus_camp_data/${date}/todos`), (snap) => {
+                els.taskList.innerHTML = ""; const todos = snap.val(); let c = 0;
+                if (!todos) { els.taskList.innerHTML = `<li class="text-center text-gray-400 text-sm mt-10">Veriler yükleniyor...</li>`; els.taskCount.innerText = "0"; return; }
+                els.taskList.innerHTML = ""; Object.keys(todos).sort((a,b)=>todos[a].createdAt-todos[b].createdAt).forEach(k => {
+                    c++; const t = todos[k]; const li = document.createElement('li'); li.className = "flex items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-50 group hover:shadow-md";
+                    li.innerHTML = `<label class="flex items-center flex-1 cursor-pointer"><input type="checkbox" class="task-checkbox form-checkbox h-5 w-5 text-pink-500 rounded focus:ring-pink-300" ${t.completed?'checked':''}><span class="ml-4 text-sm font-semibold text-gray-700 select-none">${t.text}</span></label><button class="del-btn opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 ml-3 p-2"><i class="fa-solid fa-trash-can"></i></button>`;
+                    li.querySelector('input').addEventListener('change', (e)=> update(ref(db, `tus_camp_data/${date}/todos/${k}`), {completed:e.target.checked}));
+                    li.querySelector('.del-btn').addEventListener('click', ()=> confirm('Sil?') && remove(ref(db, `tus_camp_data/${date}/todos/${k}`)));
+                    els.taskList.appendChild(li);
+                }); els.taskCount.innerText = c;
+            });
+        };
+
+        // Modals & Roadmap & Calendar
+        const openSetupModal = () => { els.setupModal.classList.remove('hidden'); setTimeout(() => { els.setupModal.classList.replace('opacity-0', 'opacity-100'); els.setupContent.classList.replace('scale-95', 'scale-100'); }, 10); };
+        const closeSetupModal = () => { els.setupModal.classList.replace('opacity-100', 'opacity-0'); els.setupContent.classList.replace('scale-100', 'scale-95'); setTimeout(() => els.setupModal.classList.add('hidden'), 300); };
+        const openActionModal = () => { els.actionModal.classList.remove('hidden'); setTimeout(() => { els.actionModal.classList.replace('opacity-0', 'opacity-100'); els.actionContent.classList.replace('scale-95', 'scale-100'); }, 10); };
+        const closeActionModal = () => { els.actionModal.classList.replace('opacity-100', 'opacity-0'); els.actionContent.classList.replace('scale-100', 'scale-95'); setTimeout(() => els.actionModal.classList.add('hidden'), 300); };
+        const renderCal = (m, y) => { const grid = document.getElementById('calendarGrid'); document.getElementById('calMonthYear').innerText = new Date(y, m).toLocaleDateString('tr-TR', {month:'long', year:'numeric'}); grid.innerHTML = ""; const firstDay = (new Date(y, m, 1).getDay() + 6) % 7; const daysInMonth = new Date(y, m+1, 0).getDate(); for(let i=0; i<firstDay; i++) grid.appendChild(document.createElement('div')); for(let d=1; d<=daysInMonth; d++) { const dayStr = getLocalISODate(new Date(y, m, d)); const el = document.createElement('div'); el.className = "calendar-day" + (dayStr===state.today?" today":"") + (dayStr===state.viewDate?" selected":""); el.innerText = d; el.onclick = () => { changeDate(dayStr); closeCalendar(); }; grid.appendChild(el); } };
+        const changeDate = (d) => { state.viewDate = d; els.selectedDateHeader.innerText = d===state.today ? "Bugün" : "Geçmiş"; els.selectedDateSub.innerText = formatDisplayDate(d); loadData(d); };
+        const openCalendar = () => { const d = new Date(state.viewDate); state.calendar.month = d.getMonth(); state.calendar.year = d.getFullYear(); renderCal(state.calendar.month, state.calendar.year); els.calendarModal.classList.remove('hidden'); setTimeout(()=> { els.calendarModal.classList.replace('opacity-0','opacity-100'); els.calendarContent.classList.replace('scale-90','scale-100'); },10); };
+        const closeCalendar = () => { els.calendarModal.classList.replace('opacity-100','opacity-0'); els.calendarContent.classList.replace('scale-100','scale-90'); setTimeout(()=> els.calendarModal.classList.add('hidden'),300); };
+        const openRoadmap = () => { els.roadmapModal.classList.remove('hidden'); setTimeout(() => { els.roadmapModal.classList.replace('opacity-0', 'opacity-100'); els.roadmapContent.classList.replace('scale-95', 'scale-100'); }, 10); };
+        const closeRoadmap = () => { els.roadmapModal.classList.replace('opacity-100', 'opacity-0'); els.roadmapContent.classList.replace('scale-100', 'scale-95'); setTimeout(() => els.roadmapModal.classList.add('hidden'), 300); };
+        const loadRoadmap = () => { onValue(ref(db, 'tus_camp_data/roadmap'), (snap) => { let data = snap.val(); if (!data) { set(ref(db, 'tus_camp_data/roadmap'), initialRoadmapData); return; } state.roadmap = data; renderRoadmap(); }); };
+        const renderRoadmap = () => { els.roadmapList.innerHTML = ""; let cur = new Date("2024-12-31"); state.roadmap.forEach((item, idx) => { let end = new Date(cur); end.setDate(end.getDate() + item.days - 1); const active = checkIfActive(cur, end); const li = document.createElement('li'); li.className = `roadmap-item flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-50 ${item.completed ? 'completed' : ''} ${active ? 'active' : ''}`; li.innerHTML = `<div class="flex flex-col items-center justify-center w-12 text-center"><span class="roadmap-date">${formatShortDate(cur)}</span><div class="h-4 w-0.5 bg-gray-100 my-1 rounded-full"></div><span class="roadmap-date text-pink-400">${formatShortDate(end)}</span></div><div class="flex-1"><div class="flex items-center gap-2"><h4 class="font-bold text-gray-700 text-sm sm:text-base leading-tight">${item.title}</h4>${active && !item.completed ? '<span class="text-[10px] bg-pink-100 text-pink-600 px-2 py-0.5 rounded-full font-bold animate-pulse">AKTİF</span>' : ''}</div><p class="text-xs text-gray-400 font-semibold mt-1">${item.days} Gün</p></div><label class="cursor-pointer relative"><input type="checkbox" class="form-checkbox h-6 w-6 text-teal-500 rounded-lg border-gray-300 focus:ring-teal-400 transition-all" ${item.completed ? 'checked' : ''}></label>`; li.querySelector('input').addEventListener('change', (e) => update(ref(db, `tus_camp_data/roadmap/${idx}`), { completed: e.target.checked })); els.roadmapList.appendChild(li); cur = new Date(end); cur.setDate(cur.getDate() + 1); }); };
+        const checkIfActive = (s, e) => { const n = new Date(); n.setHours(0,0,0,0); s.setHours(0,0,0,0); e.setHours(0,0,0,0); return n >= s && n <= e; };
+        
+        // Auto Notifications
+        const getActiveRoadmapItem = () => { let d = new Date("2024-12-31"); const n = new Date(); n.setHours(0,0,0,0); for(let i of state.roadmap){ let e = new Date(d); e.setDate(e.getDate()+i.days-1); if(n>=d && n<=e) return i; d = new Date(e); d.setDate(d.getDate()+1); } return null; };
+        const getNextRoadmapItem = () => { let d = new Date("2024-12-31"); const t = new Date(); t.setDate(t.getDate()+1); t.setHours(0,0,0,0); for(let i of state.roadmap){ let e = new Date(d); e.setDate(e.getDate()+i.days-1); if(t>=d && t<=e) return i; d = new Date(e); d.setDate(d.getDate()+1); } return null; };
+        const checkTimeBasedNotifications = () => { const now = new Date(); const h = now.getHours(); const m = now.getMinutes(); 
+            if(h===7 && m===0 && !state.flags.morningSent){ sendNotification("Günaydın Dr. Beyza! ☀️", `Hedef: ${state.stats.target} Saat. Konu: ${getActiveRoadmapItem()?.title||"TUS"}`); state.flags.morningSent=true; saveState(); }
+            if(h===22 && m===0 && !state.flags.nightSent){ sendNotification("Günün Raporu 🌙", `Bugün ${(state.stats.workedMinutesDB/60).toFixed(1)} sa. Yarın: ${getNextRoadmapItem()?.title||"TUS"}`); state.flags.nightSent=true; saveState(); }
+            if(h===0 && m===0){ state.flags.morningSent=false; state.flags.nightSent=false; saveState(); }
+        }; setInterval(checkTimeBasedNotifications, 60000);
+
+        els.toggleBtn.addEventListener('click', handleMainButton); els.stopBtn.addEventListener('click', stopSession); els.closeSetupBtn.addEventListener('click', closeSetupModal);
+        els.targetInput.addEventListener('change', (e)=> update(ref(db, `tus_camp_data/${state.viewDate}/stats`), {targetHours: +e.target.value}));
+        els.addTaskBtn.addEventListener('click', () => { const val = els.newTaskInput.value.trim(); if(val) { push(ref(db, `tus_camp_data/${state.viewDate}/todos`), {text:val, completed:false, createdAt: Date.now()}); els.newTaskInput.value=""; } });
+        els.newTaskInput.addEventListener('keypress', (e)=>{if(e.key==='Enter') els.addTaskBtn.click()});
+        els.openCalendarBtn.addEventListener('click', openCalendar); els.closeCalendarBtn.addEventListener('click', closeCalendar); document.getElementById('jumpToTodayBtn').addEventListener('click', ()=>{ changeDate(state.today); closeCalendar(); });
+        document.getElementById('calPrevMonth').addEventListener('click', ()=>{ state.calendar.month--; if(state.calendar.month<0){state.calendar.month=11; state.calendar.year--} renderCal(state.calendar.month, state.calendar.year) });
+        document.getElementById('calNextMonth').addEventListener('click', ()=>{ state.calendar.month++; if(state.calendar.month>11){state.calendar.month=0; state.calendar.year++} renderCal(state.calendar.month, state.calendar.year) });
+        document.getElementById('prevDay').addEventListener('click', () => { let d=new Date(state.viewDate); d.setDate(d.getDate()-1); changeDate(getLocalISODate(d)); });
+        document.getElementById('nextDay').addEventListener('click', () => { let d=new Date(state.viewDate); d.setDate(d.getDate()+1); changeDate(getLocalISODate(d)); });
+        els.openRoadmapBtn.addEventListener('click', openRoadmap); els.closeRoadmapBtn.addEventListener('click', closeRoadmap);
+
+        const cd = () => { const diff = new Date("2026-03-15T10:00:00") - new Date(); els.countdownDisplay.innerText = diff<=0 ? "BAŞARILAR!" : `${Math.floor(diff/86400000)} Gün ${Math.floor((diff%86400000)/3600000)} Saat`; };
+        setInterval(cd, 60000); cd(); 
+        initChart(); changeDate(state.today); loadRoadmap(); listenToNotes(); 
+        if (state.timer.isRunning) runTimer(); else if(state.timer.isPaused) { updateTimerUI(); updatePlayBtnUI(); els.stopBtn.classList.remove('hidden'); }
+        
+        const initialRoadmapData = [ { title: "Anatomi - Kadın Doğum - Fizyoloji", days: 10, completed: false }, { title: "Farmakoloji", days: 6, completed: false }, { title: "Dahiliye - Patoloji", days: 5, completed: false }, { title: "Pediatri - Mikro", days: 5, completed: false }, { title: "Genel Cer - Biyokimya", days: 4, completed: false }, { title: "Kadın Doğum - Fizyoloji - Anatomi", days: 4, completed: false }, { title: "Küçük Stajlar - Farma", days: 3, completed: false }, { title: "Dahiliye - Patoloji", days: 5, completed: false }, { title: "Pediatri - Mikro", days: 5, completed: false }, { title: "Genel Cer - Biyokimya", days: 4, completed: false }, { title: "Kadın Doğum - Fizyoloji (Anatomi)", days: 4, completed: false }, { title: "Küçük Stajlar - Farma", days: 3, completed: false }, { title: "Patoloji - Mikro", days: 4, completed: false }, { title: "Dahiliye - Pedi", days: 4, completed: false }, { title: "Pediatri - Genel Cerh", days: 3, completed: false }, { title: "Biyokimya", days: 2, completed: false }, { title: "Anatomi", days: 1, completed: false }, { title: "Farma", days: 2, completed: false } ];
+    </script>
+</body>
+</html>
