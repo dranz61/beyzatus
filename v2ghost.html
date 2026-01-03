@@ -22,7 +22,7 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Chart.js (Grafik İçin) -->
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
@@ -52,10 +52,11 @@
             --text-muted: #6B7280;
             --card-bg: rgba(255, 255, 255, 0.95);
             --card-border: 1px solid rgba(255, 255, 255, 0.6);
-            --accent-color: #DB2777; /* Pink 600 */
+            --accent-color: #DB2777;
             --accent-light: #FCE7F3;
             --btn-bg: #DB2777;
             --btn-text: #FFFFFF;
+            --icon-color: #FFFFFF; 
             --font-head: 'Patrick Hand', cursive;
         }
 
@@ -65,14 +66,15 @@
             --text-muted: #9CA3AF;
             --card-bg: #121212;
             --card-border: 1px solid #333333;
-            --accent-color: #FFFFFF; /* Sade Beyaz */
+            --accent-color: #FFFFFF;
             --accent-light: #222222;
             --btn-bg: #FFFFFF;
             --btn-text: #000000;
-            --font-head: 'Nunito', sans-serif; /* Daha ciddi font */
+            --icon-color: #000000;
+            --font-head: 'Nunito', sans-serif;
         }
 
-        body { background-color: var(--bg-color); color: var(--text-main); transition: background 0.5s ease, color 0.5s ease; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-color); color: var(--text-main); transition: background 0.5s ease; -webkit-tap-highlight-color: transparent; }
         
         .glass-card { 
             background: var(--card-bg); 
@@ -83,54 +85,76 @@
 
         h1, h2, h3 { font-family: var(--font-head) !important; }
 
-        /* Ortak Stiller */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--accent-color); border-radius: 10px; }
+        
         .task-checkbox:checked + span { text-decoration: line-through; opacity: 0.5; }
         .btn-pop:active { transform: scale(0.95); }
         .hidden-area { display: none !important; }
 
-        /* Giriş Ekranı */
         #loginScreen { position: fixed; inset: 0; background: #000000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
 
-        /* Yatay Mod */
+        .roadmap-item { transition: all 0.3s ease; border-left: 4px solid transparent; }
+        .roadmap-item.active { border-left-color: var(--accent-color); background-color: var(--accent-light); }
+        .roadmap-item.completed { opacity: 0.5; }
+
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .calendar-day { 
+            aspect-ratio: 1; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .calendar-day:hover { background: var(--accent-light); }
+        .calendar-day.today { background: var(--accent-color); color: white; font-weight: bold; }
+        .calendar-day.selected { outline: 2px solid var(--accent-color); }
+        .calendar-day.other-month { opacity: 0.3; }
+
         @media (orientation: landscape) {
             .main-grid { grid-template-columns: 1fr 1fr; }
             .timer-section { min-height: auto; }
         }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.5s ease-out; }
     </style>
 </head>
 <body class="text-gray-700 min-h-screen flex flex-col items-center p-4 sm:p-6 pb-20">
 
-    <!-- ARKA PLAN SES HİLESİ (Safari Fix için burada duruyor) -->
     <audio id="silentAudio" loop>
         <source src="data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//oeAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjkxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASCC8iEAAAAA//oeZAAAAABzsAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//" type="audio/mpeg">
     </audio>
 
-    <!-- 1. GİRİŞ EKRANI (NETFLIX STYLE) -->
+    <!-- 1. GİRİŞ EKRANI -->
     <div id="loginScreen">
         <h1 class="text-white font-sans text-3xl mb-12 tracking-[0.2em] font-light">KİM ÇALIŞIYOR?</h1>
         <div class="flex gap-8">
-            <!-- Beyza Profil -->
+            <!-- Beyza -->
             <div onclick="window.app.selectProfile('beyza')" class="group cursor-pointer flex flex-col items-center gap-4 transition-transform hover:scale-105">
                 <div class="w-36 h-36 rounded-2xl bg-pink-100 border-4 border-transparent group-hover:border-white transition-all flex items-center justify-center relative overflow-hidden shadow-2xl">
                     <i class="fa-solid fa-user-doctor text-6xl text-pink-500"></i>
                 </div>
                 <div class="text-center">
                     <span class="text-gray-400 group-hover:text-white font-bold text-xl block">Beyza</span>
-                    <span class="text-xs text-gray-500 font-mono" id="statBeyza">Yükleniyor...</span>
+                    <span class="text-xs text-gray-500 font-mono" id="statBeyza">...</span>
                 </div>
             </div>
-
-            <!-- Mirza Profil -->
+            <!-- Mirza -->
             <div onclick="window.app.selectProfile('mirza')" class="group cursor-pointer flex flex-col items-center gap-4 transition-transform hover:scale-105">
                 <div class="w-36 h-36 rounded-2xl bg-[#111] border-4 border-transparent group-hover:border-white transition-all flex items-center justify-center relative overflow-hidden shadow-2xl">
                     <i class="fa-solid fa-graduation-cap text-6xl text-white"></i>
                 </div>
                 <div class="text-center">
                     <span class="text-gray-400 group-hover:text-white font-bold text-xl block">Mirza</span>
-                    <span class="text-xs text-gray-500 font-mono" id="statMirza">Yükleniyor...</span>
+                    <span class="text-xs text-gray-500 font-mono" id="statMirza">...</span>
                 </div>
             </div>
         </div>
@@ -141,7 +165,6 @@
         
         <!-- Header -->
         <header class="w-full flex flex-col items-center mb-4 mt-2">
-            <!-- Profil Değiştir & Başlık -->
             <div class="relative w-full flex justify-center items-center mb-2">
                 <button onclick="window.app.logout()" class="absolute left-0 text-xs opacity-50 hover:opacity-100 flex items-center gap-1" style="color: var(--text-main)">
                     <i class="fa-solid fa-chevron-left"></i> Çıkış
@@ -154,14 +177,11 @@
             <div class="flex gap-3 flex-wrap justify-center">
                 <div class="glass-card px-5 py-2 rounded-full shadow-sm text-sm border font-semibold flex items-center gap-2" style="color: var(--accent-color); border-color: var(--card-border)">
                     <i class="fa-regular fa-clock"></i>
-                    Hedef: <span id="countdownDisplay" class="font-bold ml-1">...</span>
+                    <span id="countdownDisplay" class="font-bold ml-1">...</span>
                 </div>
-                
                 <button id="openNotesBtn" class="glass-card px-5 py-2 rounded-full shadow-sm text-sm border font-semibold flex items-center gap-2 hover:opacity-80 transition-opacity" style="color: var(--text-main); border-color: var(--card-border)">
                     <i class="fa-solid fa-book-medical"></i> Notlarım
                 </button>
-
-                <!-- KUNDUZ BUTONU (Sadece Mirza'da) -->
                 <a href="https://kunduz.com/u/student/counseling/" target="_blank" id="kunduzBtn" class="hidden glass-card px-5 py-2 rounded-full shadow-sm text-sm border font-bold flex items-center gap-2 hover:scale-105 transition-transform bg-white text-black border-none">
                     <img src="https://kunduz.com/favicon.ico" class="w-4 h-4" alt="Kunduz"> Kunduz
                 </a>
@@ -171,41 +191,28 @@
         <!-- Main Grid -->
         <main class="grid grid-cols-1 lg:grid-cols-2 gap-6 main-grid">
             
-            <!-- LEFT COLUMN: Timer & Stats -->
+            <!-- LEFT: Timer & Stats -->
             <div class="space-y-6">
-                <!-- TIMER CARD -->
+                <!-- TIMER -->
                 <div class="glass-card rounded-[2.5rem] p-6 shadow-xl relative overflow-hidden flex flex-col items-center justify-center min-h-[280px] timer-section">
                     <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-current to-transparent opacity-50" style="color: var(--accent-color)"></div>
-                    
-                    <div id="modeBadge" class="mb-2 px-4 py-1 rounded-full text-sm font-bold uppercase tracking-widest hidden" style="background: var(--accent-light); color: var(--accent-color)">
-                        ÇALIŞMA MODU
-                    </div>
-
-                    <div class="text-7xl sm:text-9xl font-bold tracking-wider mb-6 drop-shadow-sm tabular-nums" id="timerDisplay" style="color: var(--text-main)">
-                        00:00
-                    </div>
-                    
+                    <div id="modeBadge" class="mb-2 px-4 py-1 rounded-full text-sm font-bold uppercase tracking-widest hidden" style="background: var(--accent-light); color: var(--accent-color)">ÇALIŞMA MODU</div>
+                    <div class="text-7xl sm:text-9xl font-bold tracking-wider mb-6 drop-shadow-sm tabular-nums" id="timerDisplay" style="color: var(--text-main)">00:00</div>
                     <div class="flex items-center gap-4">
-                        <button id="stopTimerBtn" class="hidden w-12 h-12 rounded-full bg-red-500 text-white flex items-center justify-center transition-all hover:scale-105" title="Bitir">
-                            <i class="fa-solid fa-stop"></i>
-                        </button>
-                        <!-- BUTON STİLİ -->
+                        <button id="stopTimerBtn" class="hidden w-12 h-12 rounded-full bg-red-500 text-white flex items-center justify-center transition-all hover:scale-105" title="Bitir"><i class="fa-solid fa-stop"></i></button>
                         <button id="toggleTimerBtn" class="btn-pop group relative inline-flex items-center justify-center px-10 py-3 font-bold text-xl transition-all duration-300 rounded-full focus:outline-none shadow-lg hover:-translate-y-1" style="background-color: var(--btn-bg); color: var(--btn-text)">
-                            <span id="btnIcon" class="mr-3"><i class="fa-solid fa-play"></i></span>
-                            <span id="btnText">Başlat</span>
+                            <span id="btnIcon" class="mr-3"><i class="fa-solid fa-play"></i></span><span id="btnText">Başlat</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Stats & Chart -->
+                <!-- STATS -->
                 <div class="glass-card rounded-[2rem] p-6 shadow-lg">
                     <div class="flex justify-between items-end mb-2">
                         <h3 class="text-xl font-bold" style="color: var(--accent-color)">Günlük İstatistik</h3>
                         <span id="currentDateDisplay" class="text-sm opacity-60">...</span>
                     </div>
-                    
                     <div class="grid grid-cols-2 gap-4 mt-2 mb-2">
-                        <!-- Hedef -->
                         <div class="p-3 rounded-2xl text-center border flex flex-col justify-center" style="border-color: var(--card-border); background: var(--accent-light)">
                             <p class="text-xs uppercase font-bold tracking-wider mb-1 opacity-70">Hedef</p>
                             <div class="flex items-center justify-center">
@@ -213,7 +220,6 @@
                                 <span class="text-sm font-bold ml-1" style="color: var(--accent-color)">saat</span>
                             </div>
                         </div>
-                        <!-- Gerçekleşen -->
                         <div class="p-3 rounded-2xl text-center border relative flex flex-col justify-center" style="border-color: var(--card-border); background: var(--accent-light)">
                             <p class="text-xs uppercase font-bold tracking-wider mb-1 opacity-70">Gerçekleşen</p>
                             <p class="text-lg font-bold tabular-nums flex items-center justify-center" id="formattedWorkedTime" style="color: var(--accent-color)">
@@ -223,22 +229,15 @@
                             <div id="workingIndicator" class="hidden absolute top-3 right-3 w-2 h-2 rounded-full animate-ping" style="background-color: var(--accent-color)"></div>
                         </div>
                     </div>
-
-                    <!-- Progress -->
                     <div class="w-full rounded-full h-2.5 overflow-hidden mb-4" style="background: rgba(0,0,0,0.1)">
                         <div id="progressBar" class="h-2.5 rounded-full transition-all duration-700 ease-out" style="width: 0%; background-color: var(--accent-color)"></div>
                     </div>
-
-                    <!-- Chart -->
-                    <div class="h-48 w-full relative">
-                        <canvas id="weeklyChart"></canvas>
-                    </div>
+                    <div class="h-48 w-full relative"><canvas id="weeklyChart"></canvas></div>
                 </div>
             </div>
 
-            <!-- RIGHT COLUMN: Tasks & Plan -->
+            <!-- RIGHT: Tasks -->
             <div class="space-y-6">
-                <!-- Navigation -->
                 <div class="glass-card rounded-[2rem] p-4 shadow-md grid grid-cols-[auto_1fr_auto] gap-2 items-center">
                     <button id="prevDay" class="w-10 h-10 rounded-full hover:opacity-70 transition-all" style="background: var(--card-bg); color: var(--text-muted)"><i class="fa-solid fa-chevron-left"></i></button>
                     <div class="flex gap-2 justify-center">
@@ -254,7 +253,6 @@
                     <button id="nextDay" class="w-10 h-10 rounded-full hover:opacity-70 transition-all" style="background: var(--card-bg); color: var(--text-muted)"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
 
-                <!-- Tasks -->
                 <div class="glass-card rounded-[2rem] p-8 shadow-xl min-h-[400px] flex flex-col">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-2xl" style="color: var(--text-main)">Görevler</h3>
@@ -262,7 +260,7 @@
                     </div>
                     <div class="flex gap-2 mb-4">
                         <input type="text" id="newTaskInput" placeholder="Yeni görev ekle..." class="flex-1 bg-transparent border-b p-2 focus:outline-none text-sm" style="border-color: var(--text-muted); color: var(--text-main)">
-                        <button id="addTaskBtn" class="w-10 h-10 rounded-full shadow-lg transition-all flex items-center justify-center transform hover:-translate-y-1" style="background-color: var(--accent-color); color: white;">
+                        <button id="addTaskBtn" class="w-10 h-10 rounded-full shadow-lg transition-all flex items-center justify-center transform hover:-translate-y-1" style="background-color: var(--accent-color); color: var(--icon-color);">
                             <i class="fa-solid fa-plus"></i>
                         </button>
                     </div>
@@ -275,7 +273,7 @@
     </div>
 
     <!-- MODALS -->
-    <!-- 1. Notes Modal (BASE64) -->
+    <!-- Notes Modal -->
     <div id="notesModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
         <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl h-[85vh] m-4 flex flex-col overflow-hidden" style="background: var(--card-bg); color: var(--text-main)">
             <div class="p-6 border-b flex justify-between items-center" style="border-color: var(--card-border)">
@@ -298,7 +296,7 @@
         </div>
     </div>
 
-    <!-- 2. Timer Setup Modal -->
+    <!-- Timer Setup Modal -->
     <div id="timerSetupModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
         <div class="glass-card p-8 rounded-[2rem] w-full max-w-md m-4">
             <h3 class="text-2xl font-bold mb-6 text-center">Süre Seçimi</h3>
@@ -323,7 +321,7 @@
         </div>
     </div>
 
-    <!-- 3. Action Modal -->
+    <!-- Action Modal -->
     <div id="actionModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm">
         <div class="glass-card p-8 rounded-[2rem] w-full max-w-sm text-center m-4">
             <div class="mb-6">
@@ -338,16 +336,50 @@
         </div>
     </div>
 
-    <!-- 4. Calendar & Roadmap (Gizli Bileşenler) -->
-    <div id="calendarModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm"><div class="glass-card rounded-[2.5rem] p-6 w-full max-w-sm m-4" id="calendarContent"><div class="flex justify-between items-center mb-4"><h3 class="font-bold text-xl" id="calMonthYear">...</h3><div class="flex gap-2"><button id="calPrevMonth" class="w-8 h-8 rounded-full hover:bg-gray-200"><i class="fa-solid fa-chevron-left"></i></button><button id="calNextMonth" class="w-8 h-8 rounded-full hover:bg-gray-200"><i class="fa-solid fa-chevron-right"></i></button><button id="closeCalendar" class="ml-2 text-red-400 w-8 h-8"><i class="fa-solid fa-xmark"></i></button></div></div><div class="grid grid-cols-7 gap-1 mb-2 text-center text-xs font-bold opacity-60"><span>Pt</span><span>Sa</span><span>Ça</span><span>Pe</span><span>Cu</span><span>Ct</span><span style="color: var(--accent-color)">Pa</span></div><div class="calendar-grid" id="calendarGrid"></div><button id="jumpToTodayBtn" class="w-full mt-4 py-2 rounded-xl font-bold text-sm hover:opacity-80" style="background: var(--accent-light); color: var(--accent-color)">Bugüne Dön</button></div></div>
-    <div id="roadmapModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-xl h-[80vh] m-4 flex flex-col" id="roadmapContent"><div class="p-6 border-b flex justify-between items-center bg-white rounded-t-[2rem]"><div><h3 class="font-bold text-2xl text-gray-800">Yol Haritası</h3><p class="text-xs text-pink-500 font-semibold mt-1">Sınav Hedefi</p></div><button id="closeRoadmap" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-50 text-gray-400 hover:text-red-400"><i class="fa-solid fa-xmark fa-lg"></i></button></div><div class="flex-1 overflow-y-auto p-6 custom-scroll"><ul id="roadmapList" class="space-y-4"><li class="text-center text-gray-400">Plan yükleniyor...</li></ul></div><div class="p-4 bg-gray-50 rounded-b-[2rem] text-center text-xs text-gray-400">*Tarihler otomatik hesaplanmıştır.</div></div></div>
+    <!-- Calendar Modal -->
+    <div id="calendarModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="glass-card rounded-[2.5rem] p-6 w-full max-w-sm m-4" id="calendarContent">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-xl" id="calMonthYear">...</h3>
+                <div class="flex gap-2">
+                    <button id="calPrevMonth" class="w-8 h-8 rounded-full hover:bg-gray-200"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button id="calNextMonth" class="w-8 h-8 rounded-full hover:bg-gray-200"><i class="fa-solid fa-chevron-right"></i></button>
+                    <button id="closeCalendar" class="ml-2 text-red-400 w-8 h-8"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            <div class="grid grid-cols-7 gap-1 mb-2 text-center text-xs font-bold opacity-60">
+                <span>Pt</span><span>Sa</span><span>Ça</span><span>Pe</span><span>Cu</span><span>Ct</span><span style="color: var(--accent-color)">Pa</span>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <button id="jumpToTodayBtn" class="w-full mt-4 py-2 rounded-xl font-bold text-sm hover:opacity-80" style="background: var(--accent-light); color: var(--accent-color)">Bugüne Dön</button>
+        </div>
+    </div>
+
+    <!-- Roadmap Modal -->
+    <div id="roadmapModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+        <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-xl h-[80vh] m-4 flex flex-col" id="roadmapContent" style="background: var(--card-bg)">
+            <div class="p-6 border-b flex justify-between items-center rounded-t-[2rem] sticky top-0 z-10" style="background: var(--card-bg); border-color: var(--card-border)">
+                <div>
+                    <h3 class="font-bold text-2xl" style="color: var(--text-main)">Yol Haritası</h3>
+                    <p class="text-xs font-semibold mt-1" style="color: var(--accent-color)">Sınav Hedefi</p>
+                </div>
+                <button id="closeRoadmap" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-50 text-gray-400 hover:text-red-400"><i class="fa-solid fa-xmark fa-lg"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 custom-scroll">
+                <ul id="roadmapList" class="space-y-4">
+                    <li class="text-center text-gray-400">Plan yükleniyor...</li>
+                </ul>
+            </div>
+            <div class="p-4 rounded-b-[2rem] text-center text-xs" style="background: var(--accent-light); color: var(--text-muted)">*Tarihler otomatik hesaplanmıştır.</div>
+        </div>
+    </div>
 
     <!-- LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, onValue, push, update, remove, increment, set, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-        // 🔥 BURAYA KENDİ FIREBASE AYARLARINI YAPIŞTIR 🔥
+        // 🔥 FIREBASE CONFIG 🔥
         const firebaseConfig = {
             apiKey: "AIzaSyB4hWpRAQe5QXsN2ZjQ-q8aaLSxE3ESJU8",
             authDomain: "beyzatussayac-25cf4.firebaseapp.com",
@@ -360,44 +392,92 @@
         };
 
         let app, db;
-        try { app = initializeApp(firebaseConfig); db = getDatabase(app); } catch (e) { console.error(e); }
+        try { 
+            app = initializeApp(firebaseConfig); 
+            db = getDatabase(app); 
+        } catch (e) { 
+            console.error("Firebase init error:", e); 
+        }
 
         // --- GLOBAL STATE ---
         const state = {
             currentUser: null, 
-            timer: { minutes: 0, seconds: 0, isRunning: false, intervalId: null },
+            timer: { minutes: 0, seconds: 0, isRunning: false, intervalId: null, mode: 'work' },
             today: new Date(),
+            viewDate: null, // Current viewed date
+            calendar: { month: new Date().getMonth(), year: new Date().getFullYear() },
             stats: { worked: 0, target: 8 },
-            targetDate: null // Hedef tarihi burada tutacağız
+            targetDate: null,
+            roadmap: [],
+            notesData: {}
         };
 
         // --- DOM ELEMENTS ---
         const els = {
-            login: document.getElementById('loginScreen'), app: document.getElementById('appContainer'),
-            timer: document.getElementById('timerDisplay'), toggle: document.getElementById('toggleTimerBtn'),
-            stop: document.getElementById('stopTimerBtn'), statBeyza: document.getElementById('statBeyza'),
-            statMirza: document.getElementById('statMirza'), kunduz: document.getElementById('kunduzBtn'),
-            header: document.getElementById('headerTitle'), headerIcon: document.getElementById('headerIcon'), audio: document.getElementById('silentAudio'),
+            login: document.getElementById('loginScreen'), 
+            app: document.getElementById('appContainer'),
+            timer: document.getElementById('timerDisplay'), 
+            toggle: document.getElementById('toggleTimerBtn'),
+            btnIcon: document.getElementById('btnIcon'),
+            btnText: document.getElementById('btnText'),
+            stop: document.getElementById('stopTimerBtn'), 
+            statBeyza: document.getElementById('statBeyza'),
+            statMirza: document.getElementById('statMirza'), 
+            kunduz: document.getElementById('kunduzBtn'),
+            header: document.getElementById('headerTitle'), 
+            headerIcon: document.getElementById('headerIcon'), 
+            audio: document.getElementById('silentAudio'),
             countdownDisplay: document.getElementById('countdownDisplay'),
+            currentDateDisplay: document.getElementById('currentDateDisplay'),
+            selectedDateHeader: document.getElementById('selectedDateHeader'),
+            selectedDateSub: document.getElementById('selectedDateSub'),
+            modeBadge: document.getElementById('modeBadge'),
+            workingIndicator: document.getElementById('workingIndicator'),
             // Modals
-            setupModal: document.getElementById('timerSetupModal'), actionModal: document.getElementById('actionModal'),
-            calendarModal: document.getElementById('calendarModal'), roadmapModal: document.getElementById('roadmapModal'),
+            setupModal: document.getElementById('timerSetupModal'), 
+            actionModal: document.getElementById('actionModal'),
+            calendarModal: document.getElementById('calendarModal'), 
+            roadmapModal: document.getElementById('roadmapModal'),
             notesModal: document.getElementById('notesModal'),
+            // Calendar
+            calendarGrid: document.getElementById('calendarGrid'),
+            calMonthYear: document.getElementById('calMonthYear'),
             // Notes
-            noteTitle: document.getElementById('noteTitleInput'), noteFile: document.getElementById('noteFileInput'),
-            notesGrid: document.getElementById('notesGrid'), noteSearch: document.getElementById('noteSearchInput')
+            noteTitle: document.getElementById('noteTitleInput'), 
+            noteFile: document.getElementById('noteFileInput'),
+            notesGrid: document.getElementById('notesGrid'), 
+            noteSearch: document.getElementById('noteSearchInput'),
+            // Roadmap
+            roadmapList: document.getElementById('roadmapList'),
+            // Tasks
+            taskList: document.getElementById('taskList'),
+            taskCount: document.getElementById('taskCount'),
+            newTaskInput: document.getElementById('newTaskInput')
         };
 
         // --- UTILS ---
-        // Eski usul tarih formatı (Veri kaybını önlemek için)
         const getLocalISODate = (d = new Date()) => {
             const offset = d.getTimezoneOffset();
             const local = new Date(d.getTime() - (offset * 60 * 1000));
             return local.toISOString().split('T')[0];
         };
-        const formatTimePretty = (m) => { const h = Math.floor(m/60); const min = m%60; return h>0 ? `${h} sa ${min} dk` : `${min} dk`; };
+        
+        const formatTimePretty = (m) => { 
+            const h = Math.floor(m/60); 
+            const min = m%60; 
+            return h > 0 ? `${h} sa ${min} dk` : `${min} dk`; 
+        };
+        
+        const formatShortDate = (d) => new Date(d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+        
+        const formatDisplayDate = (d) => new Date(d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
 
-        // --- COUNTDOWN LOGIC (DİNAMİK) ---
+        const getTurkishMonthName = (month) => {
+            const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+            return months[month];
+        };
+
+        // --- COUNTDOWN LOGIC ---
         const updateCountdown = () => {
             if (!state.targetDate) return;
             const now = new Date();
@@ -412,107 +492,199 @@
             const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             els.countdownDisplay.innerText = `${days} Gün ${hours} Saat`;
         };
-        // Her dakika güncelle
         setInterval(updateCountdown, 60000);
 
         // --- INIT LOGIN SCREEN ---
         const initLogin = async () => {
             const getWeekly = async (user) => {
                 let total = 0;
-                // Beyza için eski path, Mirza için yeni path kontrolü
                 const basePath = user === 'beyza' ? 'tus_camp_data' : `tus_camp_data/users/${user}`;
                 
-                for (let i=0; i<7; i++) {
-                    const d = new Date(); d.setDate(d.getDate()-i); 
+                for (let i = 0; i < 7; i++) {
+                    const d = new Date(); 
+                    d.setDate(d.getDate() - i); 
                     const dateStr = getLocalISODate(d);
-                    const snap = await get(ref(db, `${basePath}/${dateStr}/stats/workedMinutes`));
-                    if(snap.exists()) total += snap.val();
+                    try {
+                        const snap = await get(ref(db, `${basePath}/${dateStr}/stats/workedMinutes`));
+                        if(snap.exists()) total += snap.val();
+                    } catch(e) { console.log(e); }
                 }
-                return (total/60).toFixed(1) + " sa";
+                return (total / 60).toFixed(1) + " sa";
             };
             
-            els.statBeyza.innerText = await getWeekly('beyza');
-            els.statMirza.innerText = await getWeekly('mirza');
+            try {
+                els.statBeyza.innerText = await getWeekly('beyza');
+                els.statMirza.innerText = await getWeekly('mirza');
+            } catch(e) {
+                els.statBeyza.innerText = "0 sa";
+                els.statMirza.innerText = "0 sa";
+            }
         };
         initLogin();
 
-        // --- CORE FUNCTIONS ---
-        window.app = {
-            selectProfile: (user) => {
-                state.currentUser = user;
-                els.audio.play().catch(() => {}); // Safari Unlock
-
-                if (user === 'mirza') {
-                    document.documentElement.setAttribute('data-theme', 'mirza');
-                    els.kunduz.classList.remove('hidden');
-                    els.header.innerText = "2027 YKS";
-                    els.headerIcon.classList.add('hidden'); // İkonu gizle
-                    state.targetDate = new Date("2027-06-15T10:00:00"); // Mirza Tarihi
-                } else {
-                    document.documentElement.removeAttribute('data-theme');
-                    els.kunduz.classList.add('hidden');
-                    els.header.innerText = "Dr. Beyza TUS";
-                    els.headerIcon.classList.remove('hidden'); // İkonu göster
-                    state.targetDate = new Date("2026-03-15T10:00:00"); // Beyza Tarihi
-                }
-                
-                updateCountdown(); // Sayacı hemen başlat
-
-                els.login.style.opacity = '0';
-                setTimeout(() => { els.login.style.display = 'none'; els.app.classList.remove('hidden-area'); loadUserData(); }, 500);
-            },
-            switchTab: (tab) => {
-                if (tab === 'work') { 
-                    document.getElementById('workOptions').classList.remove('hidden'); 
-                    document.getElementById('breakOptions').classList.add('hidden');
-                    document.getElementById('tabWork').style.color = "var(--accent-color)";
-                    document.getElementById('tabBreak').style.color = "var(--text-muted)";
-                } else {
-                    document.getElementById('workOptions').classList.add('hidden'); 
-                    document.getElementById('breakOptions').classList.remove('hidden');
-                    document.getElementById('tabWork').style.color = "var(--text-muted)";
-                    document.getElementById('tabBreak').style.color = "var(--accent-color)";
-                }
-            },
-            startSession: (mins, mode = 'work') => {
-                state.timer.minutes = mins; state.timer.seconds = 0; state.timer.isRunning = true;
-                els.setupModal.classList.add('hidden');
-                runTimer();
-            },
-            quickAction: (mode) => {
-                els.actionModal.classList.add('hidden');
-                window.app.switchTab(mode);
-                els.setupModal.classList.remove('hidden');
-            },
-            logout: () => {
-                window.location.reload(); // En temiz çıkış yöntemi
-            },
-            deleteNote: (key) => { if(confirm("Silmek istiyor musun?")) remove(ref(db, getNotePath() + `/${key}`)); }
-        };
-
-        // Helper for paths
-        const getUserPath = () => {
-            const todayStr = getLocalISODate();
-            // Beyza eski yol (Root), Mirza yeni yol (Users/Mirza)
-            return state.currentUser === 'beyza' ? `tus_camp_data/${todayStr}` : `tus_camp_data/users/mirza/${todayStr}`;
+        // --- PATH HELPERS ---
+        const getUserPath = (dateStr = null) => {
+            const date = dateStr || getLocalISODate();
+            return state.currentUser === 'beyza' ? `tus_camp_data/${date}` : `tus_camp_data/users/mirza/${date}`;
         };
         
         const getNotePath = () => {
             return state.currentUser === 'beyza' ? `tus_camp_data/notes` : `tus_camp_data/users/mirza/notes`;
         };
 
+        // --- CHANGE DATE ---
+        const changeDate = (dateInput) => {
+            const dateStr = typeof dateInput === 'object' ? getLocalISODate(dateInput) : dateInput;
+            state.viewDate = dateStr;
+            
+            const viewD = new Date(dateStr + 'T00:00:00');
+            const todayStr = getLocalISODate();
+            
+            // Update header
+            if (dateStr === todayStr) {
+                els.selectedDateHeader.innerText = "Bugün";
+            } else {
+                const diff = Math.round((viewD - new Date(todayStr + 'T00:00:00')) / (1000 * 60 * 60 * 24));
+                if (diff === -1) els.selectedDateHeader.innerText = "Dün";
+                else if (diff === 1) els.selectedDateHeader.innerText = "Yarın";
+                else els.selectedDateHeader.innerText = viewD.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+            }
+            
+            els.selectedDateSub.innerText = viewD.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
+            els.currentDateDisplay.innerText = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
+
+            // Load tasks for this date
+            loadTasksForDate(dateStr);
+        };
+
+        // --- LOAD TASKS ---
+        const loadTasksForDate = (dateStr) => {
+            const path = getUserPath(dateStr);
+            
+            onValue(ref(db, `${path}/todos`), (snap) => {
+                els.taskList.innerHTML = "";
+                const todos = snap.val();
+                
+                if(!todos) { 
+                    els.taskList.innerHTML = '<li class="text-center opacity-50 text-sm mt-4">Görev yok</li>'; 
+                    els.taskCount.innerText = "0"; 
+                    return; 
+                }
+                
+                let count = 0;
+                Object.entries(todos).forEach(([key, todo]) => {
+                    count++;
+                    const li = document.createElement('li');
+                    li.className = "flex items-center p-3 rounded-xl border mb-2";
+                    li.style.background = state.currentUser === 'mirza' ? '#1a1a1a' : 'white';
+                    li.style.borderColor = state.currentUser === 'mirza' ? '#333' : '#f3f4f6';
+                    
+                    li.innerHTML = `
+                        <input type="checkbox" ${todo.completed ? 'checked' : ''} class="mr-3 task-checkbox w-5 h-5 rounded">
+                        <span class="flex-1 ${todo.completed ? 'line-through opacity-50' : ''}">${todo.text}</span>
+                        <button class="text-red-400 text-xs hover:text-red-600 px-2">Sil</button>
+                    `;
+                    
+                    li.querySelector('input').addEventListener('change', (e) => {
+                        update(ref(db, `${path}/todos/${key}`), { completed: e.target.checked });
+                    });
+                    
+                    li.querySelector('button').addEventListener('click', () => {
+                        if(confirm("Görevi silmek istiyor musun?")) {
+                            remove(ref(db, `${path}/todos/${key}`));
+                        }
+                    });
+                    
+                    els.taskList.appendChild(li);
+                });
+                els.taskCount.innerText = count;
+            });
+        };
+
+        // --- CALENDAR ---
+        const renderCalendar = (month, year) => {
+            els.calMonthYear.innerText = `${getTurkishMonthName(month)} ${year}`;
+            els.calendarGrid.innerHTML = "";
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDay = (firstDay.getDay() + 6) % 7; // Monday = 0
+            
+            const todayStr = getLocalISODate();
+            
+            // Previous month days
+            const prevMonth = new Date(year, month, 0);
+            for (let i = startDay - 1; i >= 0; i--) {
+                const day = prevMonth.getDate() - i;
+                const div = document.createElement('div');
+                div.className = 'calendar-day other-month';
+                div.textContent = day;
+                els.calendarGrid.appendChild(div);
+            }
+            
+            // Current month days
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const div = document.createElement('div');
+                div.className = 'calendar-day';
+                div.textContent = day;
+                
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                if (dateStr === todayStr) {
+                    div.classList.add('today');
+                }
+                if (dateStr === state.viewDate) {
+                    div.classList.add('selected');
+                }
+                
+                div.addEventListener('click', () => {
+                    changeDate(dateStr);
+                    els.calendarModal.classList.add('hidden');
+                });
+                
+                els.calendarGrid.appendChild(div);
+            }
+            
+            // Next month days
+            const remainingDays = 42 - els.calendarGrid.children.length;
+            for (let day = 1; day <= remainingDays; day++) {
+                const div = document.createElement('div');
+                div.className = 'calendar-day other-month';
+                div.textContent = day;
+                els.calendarGrid.appendChild(div);
+            }
+        };
+
         // --- TIMER ---
+        const updateTimerDisplay = () => {
+            els.timer.innerText = `${state.timer.minutes.toString().padStart(2,'0')}:${state.timer.seconds.toString().padStart(2,'0')}`;
+        };
+
         const runTimer = () => {
             if (state.timer.intervalId) clearInterval(state.timer.intervalId);
-            els.stop.classList.remove('hidden'); els.toggle.innerText = "Duraklat";
+            
+            state.timer.isRunning = true;
+            els.stop.classList.remove('hidden');
+            els.btnIcon.innerHTML = '<i class="fa-solid fa-pause"></i>';
+            els.btnText.innerText = "Duraklat";
+            els.modeBadge.classList.remove('hidden');
+            els.modeBadge.innerText = state.timer.mode === 'work' ? 'ÇALIŞMA MODU' : 'MOLA MODU';
+            els.workingIndicator.classList.remove('hidden');
+            
             state.timer.intervalId = setInterval(() => {
                 if (state.timer.seconds === 0) {
-                    if (state.timer.minutes === 0) { finishTimer(); return; }
-                    state.timer.minutes--; state.timer.seconds = 59;
-                } else { state.timer.seconds--; }
+                    if (state.timer.minutes === 0) { 
+                        finishTimer(); 
+                        return; 
+                    }
+                    state.timer.minutes--; 
+                    state.timer.seconds = 59;
+                } else { 
+                    state.timer.seconds--; 
+                }
                 
-                // Dakika başı DB güncelle
-                if (state.timer.seconds === 0) {
+                // Update DB every minute (only for work mode)
+                if (state.timer.seconds === 0 && state.timer.mode === 'work') {
                     update(ref(db, `${getUserPath()}/stats`), { workedMinutes: increment(1) });
                 }
                 updateTimerDisplay();
@@ -520,154 +692,511 @@
         };
 
         const finishTimer = () => {
-            clearInterval(state.timer.intervalId); state.timer.isRunning = false;
-            const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg'); audio.play().catch(()=>{});
+            clearInterval(state.timer.intervalId); 
+            state.timer.isRunning = false;
+            state.timer.intervalId = null;
+            
+            els.modeBadge.classList.add('hidden');
+            els.workingIndicator.classList.add('hidden');
+            els.stop.classList.add('hidden');
+            els.btnIcon.innerHTML = '<i class="fa-solid fa-play"></i>';
+            els.btnText.innerText = "Başlat";
+            state.timer.minutes = 0;
+            state.timer.seconds = 0;
+            updateTimerDisplay();
+            
+            // Play sound
+            try {
+                const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg'); 
+                audio.play().catch(() => {});
+            } catch(e) {}
+            
+            // Show action modal
             els.actionModal.classList.remove('hidden');
         };
 
-        const updateTimerDisplay = () => {
-            els.timer.innerText = `${state.timer.minutes.toString().padStart(2,'0')}:${state.timer.seconds.toString().padStart(2,'0')}`;
+        const pauseTimer = () => {
+            clearInterval(state.timer.intervalId);
+            state.timer.isRunning = false;
+            state.timer.intervalId = null;
+            els.btnIcon.innerHTML = '<i class="fa-solid fa-play"></i>';
+            els.btnText.innerText = "Devam Et";
+            els.workingIndicator.classList.add('hidden');
         };
 
-        els.toggle.addEventListener('click', () => {
-            if(state.timer.isRunning) {
-                clearInterval(state.timer.intervalId); state.timer.isRunning = false; els.toggle.innerText = "Devam Et";
-            } else {
-                if(state.timer.minutes > 0) runTimer();
-                else els.setupModal.classList.remove('hidden');
-            }
-        });
+        const resumeTimer = () => {
+            runTimer();
+        };
 
-        els.stop.addEventListener('click', () => {
-            if(confirm("Bitirmek istiyor musun?")) {
-                clearInterval(state.timer.intervalId); state.timer.minutes = 0; state.timer.seconds = 0;
-                state.timer.isRunning = false; updateTimerDisplay(); els.stop.classList.add('hidden'); els.toggle.innerText = "Başlat";
-            }
-        });
-
-        // --- DATA & CHART ---
+        // --- CHART ---
         let chartInstance;
         const initChart = () => {
             const ctx = document.getElementById('weeklyChart').getContext('2d');
             chartInstance = new Chart(ctx, {
                 type: 'bar',
-                data: { labels: [], datasets: [{ label: 'Saat', data: [], backgroundColor: 'rgba(236, 72, 153, 0.5)', borderRadius: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 8 }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
+                data: { 
+                    labels: [], 
+                    datasets: [{ 
+                        label: 'Saat', 
+                        data: [], 
+                        backgroundColor: 'rgba(219, 39, 119, 0.5)', 
+                        borderRadius: 8 
+                    }] 
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        y: { beginAtZero: true, max: 10 }, 
+                        x: { grid: { display: false } } 
+                    }, 
+                    plugins: { legend: { display: false } } 
+                }
             });
         };
-        initChart();
 
         const updateChartData = async () => {
-            const labels = []; const data = [];
+            const labels = []; 
+            const data = [];
             const basePath = state.currentUser === 'beyza' ? 'tus_camp_data' : `tus_camp_data/users/mirza`;
 
             for (let i = 6; i >= 0; i--) {
-                const d = new Date(); d.setDate(d.getDate() - i); const dateStr = getLocalISODate(d);
+                const d = new Date(); 
+                d.setDate(d.getDate() - i); 
+                const dateStr = getLocalISODate(d);
                 labels.push(d.toLocaleDateString('tr-TR', { weekday: 'short' }));
-                const snap = await get(ref(db, `${basePath}/${dateStr}/stats/workedMinutes`));
-                data.push(snap.exists() ? (snap.val()/60).toFixed(1) : 0);
+                
+                try {
+                    const snap = await get(ref(db, `${basePath}/${dateStr}/stats/workedMinutes`));
+                    data.push(snap.exists() ? (snap.val() / 60).toFixed(1) : 0);
+                } catch(e) {
+                    data.push(0);
+                }
             }
+            
             if(chartInstance) {
                 chartInstance.data.labels = labels;
                 chartInstance.data.datasets[0].data = data;
-                chartInstance.data.datasets[0].backgroundColor = state.currentUser === 'mirza' ? 'rgba(255,255,255,0.5)' : 'rgba(219, 39, 119, 0.5)';
+                chartInstance.data.datasets[0].backgroundColor = state.currentUser === 'mirza' 
+                    ? 'rgba(255,255,255,0.5)' 
+                    : 'rgba(219, 39, 119, 0.5)';
                 chartInstance.update();
             }
         };
 
+        // --- LOAD USER DATA ---
         const loadUserData = () => {
-            const path = getUserPath();
+            const todayPath = getUserPath();
             
             // Stats Listener
-            onValue(ref(db, `${path}/stats`), (snap) => {
+            onValue(ref(db, `${todayPath}/stats`), (snap) => {
                 const val = snap.val() || {};
                 const mins = val.workedMinutes || 0;
-                document.getElementById('formattedWorkedTime').innerText = `${Math.floor(mins/60)} sa ${mins%60} dk`;
+                state.stats.target = val.targetHours || 8;
+
+                document.getElementById('formattedWorkedTime').innerHTML = `${Math.floor(mins/60)} sa ${mins%60} dk <span class="text-xs ml-1 opacity-70">00 sn</span>`;
                 
-                const pct = Math.min(100, Math.round((mins / (8 * 60)) * 100));
+                const pct = Math.min(100, Math.round((mins / (state.stats.target * 60)) * 100));
                 document.getElementById('percentageText').innerText = `%${pct} Hedefe Ulaşıldı`;
                 document.getElementById('progressBar').style.width = `${pct}%`;
-                
-                updateChartData(); // Update chart when data changes
+                document.getElementById('targetInput').value = state.stats.target;
             });
 
-            // Tasks Listener
-            onValue(ref(db, `${path}/todos`), (snap) => {
-                const list = document.getElementById('taskList'); list.innerHTML = "";
-                const todos = snap.val();
-                if(!todos) { list.innerHTML = '<li class="text-center opacity-50 text-sm mt-4">Görev yok</li>'; document.getElementById('taskCount').innerText="0"; return; }
-                
-                let count = 0;
-                Object.entries(todos).forEach(([key, todo]) => {
-                    count++;
-                    const li = document.createElement('li');
-                    li.className = "flex items-center p-3 rounded-xl border mb-2 " + (state.currentUser==='mirza' ? 'bg-[#1a1a1a] border-[#333]' : 'bg-white border-gray-100');
-                    li.innerHTML = `<input type="checkbox" ${todo.completed ? 'checked' : ''} class="mr-3 task-checkbox"><span class="flex-1 ${todo.completed ? 'line-through opacity-50' : ''}">${todo.text}</span><button onclick="window.app.delTask('${key}')" class="text-red-400 text-xs">Sil</button>`;
-                    li.querySelector('input').addEventListener('change', (e) => update(ref(db, `${path}/todos/${key}`), { completed: e.target.checked }));
-                    list.appendChild(li);
-                });
-                document.getElementById('taskCount').innerText = count;
-            });
+            updateChartData();
+            
+            // Target hours update
+            document.getElementById('targetInput').onchange = (e) => {
+                update(ref(db, `${todayPath}/stats`), { targetHours: +e.target.value });
+            };
         };
 
-        window.app.delTask = (key) => remove(ref(db, `${getUserPath()}/todos/${key}`));
-        
-        document.getElementById('addTaskBtn').addEventListener('click', () => {
-            const txt = document.getElementById('newTaskInput').value;
-            if(txt) { push(ref(db, `${getUserPath()}/todos`), { text: txt, completed: false, createdAt: Date.now() }); document.getElementById('newTaskInput').value = ""; }
-        });
+        // --- ROADMAP DATA ---
+        const initialRoadmapData = [ 
+            { title: "Anatomi - Kadın Doğum - Fizyoloji", days: 10, completed: false }, 
+            { title: "Farmakoloji", days: 6, completed: false }, 
+            { title: "Dahiliye - Patoloji", days: 5, completed: false }, 
+            { title: "Pediatri - Mikro", days: 5, completed: false }, 
+            { title: "Genel Cer - Biyokimya", days: 4, completed: false }, 
+            { title: "Kadın Doğum - Fizyoloji - Anatomi", days: 4, completed: false }, 
+            { title: "Küçük Stajlar - Farma", days: 3, completed: false }, 
+            { title: "Dahiliye - Patoloji", days: 5, completed: false }, 
+            { title: "Pediatri - Mikro", days: 5, completed: false }, 
+            { title: "Genel Cer - Biyokimya", days: 4, completed: false }, 
+            { title: "Kadın Doğum - Fizyoloji (Anatomi)", days: 4, completed: false }, 
+            { title: "Küçük Stajlar - Farma", days: 3, completed: false }, 
+            { title: "Patoloji - Mikro", days: 4, completed: false }, 
+            { title: "Dahiliye - Pedi", days: 4, completed: false }, 
+            { title: "Pediatri - Genel Cerh", days: 3, completed: false }, 
+            { title: "Biyokimya", days: 2, completed: false }, 
+            { title: "Anatomi", days: 1, completed: false }, 
+            { title: "Farma", days: 2, completed: false } 
+        ];
+
+        const checkIfActive = (start, end) => { 
+            const now = new Date(); 
+            now.setHours(0, 0, 0, 0); 
+            const s = new Date(start);
+            const e = new Date(end);
+            s.setHours(0, 0, 0, 0); 
+            e.setHours(0, 0, 0, 0); 
+            return now >= s && now <= e; 
+        };
+
+        const loadRoadmap = () => { 
+            state.roadmap = [...initialRoadmapData];
+            renderRoadmap();
+        };
+
+        const renderRoadmap = () => { 
+            els.roadmapList.innerHTML = ""; 
+            let currentDate = new Date("2024-12-31"); 
+            
+            state.roadmap.forEach((item, idx) => { 
+                const startDate = new Date(currentDate);
+                let endDate = new Date(currentDate); 
+                endDate.setDate(endDate.getDate() + item.days - 1); 
+                
+                const isActive = checkIfActive(startDate, endDate); 
+                
+                const li = document.createElement('li'); 
+                li.className = `roadmap-item flex items-center gap-4 p-4 rounded-2xl shadow-sm border ${item.completed ? 'completed' : ''} ${isActive ? 'active' : ''}`;
+                li.style.background = state.currentUser === 'mirza' ? '#1a1a1a' : 'white';
+                li.style.borderColor = state.currentUser === 'mirza' ? '#333' : '#f3f4f6';
+                
+                li.innerHTML = `
+                    <div class="flex flex-col items-center justify-center w-14 text-center">
+                        <span class="text-xs font-bold" style="color: var(--text-muted)">${formatShortDate(startDate)}</span>
+                        <div class="h-4 w-0.5 my-1 rounded-full" style="background: var(--accent-light)"></div>
+                        <span class="text-xs font-bold" style="color: var(--accent-color)">${formatShortDate(endDate)}</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h4 class="font-bold text-sm sm:text-base leading-tight" style="color: var(--text-main)">${item.title}</h4>
+                            ${isActive && !item.completed ? '<span class="text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse" style="background: var(--accent-light); color: var(--accent-color)">AKTİF</span>' : ''}
+                        </div>
+                        <p class="text-xs mt-1" style="color: var(--text-muted)">${item.days} Gün</p>
+                    </div>
+                    <label class="cursor-pointer">
+                        <input type="checkbox" class="w-6 h-6 rounded-lg" ${item.completed ? 'checked' : ''}>
+                    </label>
+                `; 
+                
+                li.querySelector('input').addEventListener('change', (e) => {
+                    state.roadmap[idx].completed = e.target.checked;
+                    renderRoadmap();
+                }); 
+                
+                els.roadmapList.appendChild(li); 
+                
+                currentDate = new Date(endDate); 
+                currentDate.setDate(currentDate.getDate() + 1); 
+            }); 
+        };
 
         // --- NOTES ---
         const compressImage = (file) => {
             return new Promise((resolve, reject) => {
-                const reader = new FileReader(); reader.readAsDataURL(file);
+                const reader = new FileReader(); 
+                reader.readAsDataURL(file);
                 reader.onload = (e) => {
-                    const img = new Image(); img.src = e.target.result;
+                    const img = new Image(); 
+                    img.src = e.target.result;
                     img.onload = () => {
-                        const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
-                        const MAX = 800; const scale = MAX / img.width;
-                        canvas.width = MAX; canvas.height = img.height * scale;
+                        const canvas = document.createElement('canvas'); 
+                        const ctx = canvas.getContext('2d');
+                        const MAX = 800; 
+                        const scale = Math.min(MAX / img.width, MAX / img.height, 1);
+                        canvas.width = img.width * scale; 
+                        canvas.height = img.height * scale;
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.6)); // Low quality
+                        resolve(canvas.toDataURL('image/jpeg', 0.6));
                     };
+                    img.onerror = reject;
                 };
+                reader.onerror = reject;
             });
         };
 
         const uploadNote = async (e) => {
-            const file = e.target.files[0]; const title = els.noteTitle.value.trim() || "Adsız";
+            const file = e.target.files[0]; 
+            const title = els.noteTitle.value.trim() || "Adsız";
             if(!file) return;
-            document.getElementById('uploadProgress').classList.remove('hidden');
-            const base64 = await compressImage(file);
-            await push(ref(db, getNotePath()), { title, image: base64, createdAt: Date.now() });
-            document.getElementById('uploadProgress').classList.add('hidden');
-            els.noteTitle.value = ""; alert("Not Eklendi!");
+            
+            const progressBar = document.getElementById('uploadProgress');
+            progressBar.classList.remove('hidden');
+            
+            try {
+                const base64 = await compressImage(file);
+                await push(ref(db, getNotePath()), { title, image: base64, createdAt: Date.now() });
+                progressBar.classList.add('hidden');
+                els.noteTitle.value = ""; 
+                els.noteFile.value = "";
+                alert("Not Eklendi!");
+            } catch(e) {
+                progressBar.classList.add('hidden');
+                alert("Hata: " + e.message);
+            }
         };
 
-        // Listen notes on modal open to save resources
+        const loadNotes = () => {
+            onValue(ref(db, getNotePath()), (snap) => {
+                state.notesData = snap.val() || {};
+                renderNotes();
+            });
+        };
+
+        const renderNotes = (searchTerm = '') => {
+            els.notesGrid.innerHTML = "";
+            const notes = state.notesData;
+            
+            if(!notes || Object.keys(notes).length === 0) {
+                els.notesGrid.innerHTML = '<p class="col-span-full text-center opacity-50">Henüz not yok</p>';
+                return;
+            }
+            
+            Object.entries(notes).reverse().forEach(([key, note]) => {
+                if (searchTerm && !note.title.toLowerCase().includes(searchTerm.toLowerCase())) {
+                    return;
+                }
+                
+                const div = document.createElement('div');
+                div.className = "p-2 rounded-xl border flex flex-col";
+                div.style.background = state.currentUser === 'mirza' ? '#1a1a1a' : 'white';
+                div.style.borderColor = state.currentUser === 'mirza' ? '#333' : '#f3f4f6';
+                
+                div.innerHTML = `
+                    <img src="${note.image}" class="w-full h-32 object-cover rounded-lg mb-2 cursor-pointer hover:opacity-80" alt="${note.title}">
+                    <h4 class="font-bold text-sm truncate" style="color: var(--text-main)">${note.title}</h4>
+                    <button class="text-xs text-red-400 text-right w-full mt-1 hover:text-red-600">Sil</button>
+                `;
+                
+                div.querySelector('img').addEventListener('click', () => {
+                    window.open(note.image, '_blank');
+                });
+                
+                div.querySelector('button').addEventListener('click', () => {
+                    if(confirm("Notu silmek istiyor musun?")) {
+                        remove(ref(db, getNotePath() + `/${key}`));
+                    }
+                });
+                
+                els.notesGrid.appendChild(div);
+            });
+        };
+
+        // --- CORE APP FUNCTIONS ---
+        window.app = {
+            selectProfile: (user) => {
+                state.currentUser = user;
+                els.audio.play().catch(() => {});
+
+                if (user === 'mirza') {
+                    document.documentElement.setAttribute('data-theme', 'mirza');
+                    els.kunduz.classList.remove('hidden');
+                    els.header.innerText = "2027 YKS";
+                    els.headerIcon.classList.add('hidden');
+                    state.targetDate = new Date("2027-06-15T10:00:00");
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                    els.kunduz.classList.add('hidden');
+                    els.header.innerText = "Dr. Beyza TUS";
+                    els.headerIcon.classList.remove('hidden');
+                    state.targetDate = new Date("2026-03-15T10:00:00");
+                }
+                
+                updateCountdown();
+
+                els.login.style.opacity = '0';
+                setTimeout(() => { 
+                    els.login.style.display = 'none'; 
+                    els.app.classList.remove('hidden-area'); 
+                    
+                    // Initialize everything
+                    initChart();
+                    loadUserData();
+                    changeDate(new Date());
+                    renderCalendar(state.calendar.month, state.calendar.year);
+                    loadRoadmap();
+                }, 500);
+            },
+            
+            switchTab: (tab) => {
+                const tabWork = document.getElementById('tabWork');
+                const tabBreak = document.getElementById('tabBreak');
+                const workOptions = document.getElementById('workOptions');
+                const breakOptions = document.getElementById('breakOptions');
+                
+                if (tab === 'work') { 
+                    workOptions.classList.remove('hidden'); 
+                    breakOptions.classList.add('hidden');
+                    tabWork.style.background = "var(--card-bg)";
+                    tabWork.style.color = "var(--accent-color)";
+                    tabWork.style.opacity = "1";
+                    tabBreak.style.background = "transparent";
+                    tabBreak.style.opacity = "0.6";
+                } else {
+                    workOptions.classList.add('hidden'); 
+                    breakOptions.classList.remove('hidden');
+                    tabBreak.style.background = "var(--card-bg)";
+                    tabBreak.style.color = "var(--accent-color)";
+                    tabBreak.style.opacity = "1";
+                    tabWork.style.background = "transparent";
+                    tabWork.style.opacity = "0.6";
+                }
+            },
+            
+            startSession: (mins, mode = 'work') => {
+                state.timer.minutes = mins; 
+                state.timer.seconds = 0; 
+                state.timer.mode = mode;
+                els.setupModal.classList.add('hidden');
+                updateTimerDisplay();
+                runTimer();
+            },
+            
+            quickAction: (mode) => {
+                els.actionModal.classList.add('hidden');
+                window.app.switchTab(mode);
+                els.setupModal.classList.remove('hidden');
+            },
+            
+            logout: () => {
+                if(state.timer.isRunning) {
+                    if(!confirm("Timer çalışıyor! Çıkmak istediğine emin misin?")) return;
+                    clearInterval(state.timer.intervalId);
+                }
+                window.location.reload();
+            }
+        };
+
+        // --- EVENT LISTENERS ---
+        
+        // Timer toggle
+        els.toggle.addEventListener('click', () => {
+            if(state.timer.isRunning) {
+                pauseTimer();
+            } else {
+                if(state.timer.minutes > 0 || state.timer.seconds > 0) {
+                    resumeTimer();
+                } else {
+                    els.setupModal.classList.remove('hidden');
+                }
+            }
+        });
+
+        // Stop timer
+        els.stop.addEventListener('click', () => {
+            if(confirm("Bitirmek istiyor musun?")) {
+                clearInterval(state.timer.intervalId); 
+                state.timer.minutes = 0; 
+                state.timer.seconds = 0;
+                state.timer.isRunning = false; 
+                state.timer.intervalId = null;
+                updateTimerDisplay(); 
+                els.stop.classList.add('hidden'); 
+                els.btnIcon.innerHTML = '<i class="fa-solid fa-play"></i>';
+                els.btnText.innerText = "Başlat";
+                els.modeBadge.classList.add('hidden');
+                els.workingIndicator.classList.add('hidden');
+            }
+        });
+
+        // Add task
+        document.getElementById('addTaskBtn').addEventListener('click', () => {
+            const txt = els.newTaskInput.value.trim();
+            if(txt) { 
+                push(ref(db, `${getUserPath(state.viewDate)}/todos`), { 
+                    text: txt, 
+                    completed: false, 
+                    createdAt: Date.now() 
+                }); 
+                els.newTaskInput.value = ""; 
+            }
+        });
+
+        els.newTaskInput.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') {
+                document.getElementById('addTaskBtn').click();
+            }
+        });
+
+        // Day navigation
+        document.getElementById('prevDay').addEventListener('click', () => { 
+            let d = new Date(state.viewDate + 'T00:00:00'); 
+            d.setDate(d.getDate() - 1); 
+            changeDate(getLocalISODate(d)); 
+        });
+        
+        document.getElementById('nextDay').addEventListener('click', () => { 
+            let d = new Date(state.viewDate + 'T00:00:00'); 
+            d.setDate(d.getDate() + 1); 
+            changeDate(getLocalISODate(d)); 
+        });
+
+        // Calendar
+        document.getElementById('openCalendarBtn').addEventListener('click', () => {
+            renderCalendar(state.calendar.month, state.calendar.year);
+            els.calendarModal.classList.remove('hidden');
+        });
+        
+        document.getElementById('closeCalendar').addEventListener('click', () => els.calendarModal.classList.add('hidden'));
+        
+        document.getElementById('calPrevMonth').addEventListener('click', () => { 
+            state.calendar.month--; 
+            if(state.calendar.month < 0) {
+                state.calendar.month = 11; 
+                state.calendar.year--;
+            } 
+            renderCalendar(state.calendar.month, state.calendar.year); 
+        });
+        
+        document.getElementById('calNextMonth').addEventListener('click', () => { 
+            state.calendar.month++; 
+            if(state.calendar.month > 11) {
+                state.calendar.month = 0; 
+                state.calendar.year++;
+            } 
+            renderCalendar(state.calendar.month, state.calendar.year); 
+        });
+        
+        document.getElementById('jumpToTodayBtn').addEventListener('click', () => { 
+            changeDate(new Date()); 
+            els.calendarModal.classList.add('hidden'); 
+        });
+
+        // Roadmap
+        document.getElementById('openRoadmapBtn').addEventListener('click', () => { 
+            els.roadmapModal.classList.remove('hidden'); 
+            loadRoadmap(); 
+        });
+        document.getElementById('closeRoadmap').addEventListener('click', () => els.roadmapModal.classList.add('hidden'));
+
+        // Notes
         document.getElementById('openNotesBtn').addEventListener('click', () => {
             els.notesModal.classList.remove('hidden');
-            onValue(ref(db, getNotePath()), (snap) => {
-                const notes = snap.val(); els.notesGrid.innerHTML = "";
-                if(!notes) return;
-                Object.entries(notes).reverse().forEach(([key, note]) => {
-                    const div = document.createElement('div');
-                    div.className = "p-2 rounded-xl border flex flex-col " + (state.currentUser==='mirza'?'bg-[#1a1a1a] border-[#333]':'bg-white border-gray-100');
-                    div.innerHTML = `<img src="${note.image}" class="w-full h-32 object-cover rounded-lg mb-2" onclick="window.open('${note.image}')"><h4 class="font-bold text-sm truncate">${note.title}</h4><button onclick="window.app.deleteNote('${key}')" class="text-xs text-red-400 text-right w-full mt-1">Sil</button>`;
-                    els.notesGrid.appendChild(div);
-                });
+            loadNotes();
+        });
+        document.getElementById('closeNotes').addEventListener('click', () => els.notesModal.classList.add('hidden'));
+        els.noteFile.addEventListener('change', uploadNote);
+        
+        els.noteSearch.addEventListener('input', (e) => {
+            renderNotes(e.target.value);
+        });
+
+        // Setup modal
+        document.getElementById('closeSetup').addEventListener('click', () => els.setupModal.classList.add('hidden'));
+
+        // Close modals on backdrop click
+        [els.calendarModal, els.roadmapModal, els.notesModal, els.setupModal, els.actionModal].forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if(e.target === modal) {
+                    modal.classList.add('hidden');
+                }
             });
         });
 
-        document.getElementById('closeNotes').addEventListener('click', () => els.notesModal.classList.add('hidden'));
-        document.getElementById('closeSetup').addEventListener('click', () => els.setupModal.classList.add('hidden'));
-        els.noteFile.addEventListener('change', uploadNote);
-
-        // Calendar & Roadmap Modals
-        document.getElementById('openCalendarBtn').addEventListener('click', () => els.calendarModal.classList.remove('hidden'));
-        document.getElementById('closeCalendar').addEventListener('click', () => els.calendarModal.classList.add('hidden'));
-        document.getElementById('openRoadmapBtn').addEventListener('click', () => els.roadmapModal.classList.remove('hidden'));
-        document.getElementById('closeRoadmap').addEventListener('click', () => els.roadmapModal.classList.add('hidden'));
+        // Initialize view date
+        state.viewDate = getLocalISODate();
 
     </script>
 </body>
