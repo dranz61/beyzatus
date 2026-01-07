@@ -5,14 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kampüs Takip</title>
     
+    <!-- PWA & IOS AYARLARI -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#FFF1F2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TUS Kampı">
     <link rel="apple-touch-icon" href="icon.png">
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Quicksand:wght@500;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Chart.js (Grafik İçin) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
@@ -35,14 +45,14 @@
     </script>
 
     <style>
-        /* TEMA AYARLARI */
+        /* TEMA DEĞİŞKENLERİ */
         :root {
             --bg-color: #FFF1F2;
             --text-main: #374151;
             --text-muted: #6B7280;
             --card-bg: rgba(255, 255, 255, 0.95);
             --card-border: 1px solid rgba(255, 255, 255, 0.6);
-            --accent-color: #DB2777;
+            --accent-color: #DB2777; /* Pink 600 */
             --accent-light: #FCE7F3;
             --btn-bg: #DB2777;
             --btn-text: #FFFFFF;
@@ -56,135 +66,226 @@
             --text-muted: #9CA3AF;
             --card-bg: #121212;
             --card-border: 1px solid #333333;
-            --accent-color: #FFFFFF;
+            --accent-color: #FFFFFF; /* Sade Beyaz */
             --accent-light: #222222;
             --btn-bg: #FFFFFF;
             --btn-text: #000000;
             --icon-color: #000000;
-            --font-head: 'Nunito', sans-serif;
+            --font-head: 'Nunito', sans-serif; /* Daha ciddi font */
         }
 
-        body { background-color: var(--bg-color); color: var(--text-main); transition: background 0.5s ease; -webkit-tap-highlight-color: transparent; }
-        .glass-card { background: var(--card-bg); backdrop-filter: blur(12px); border: var(--card-border); transition: all 0.5s ease; }
-        h1, h2, h3 { font-family: var(--font-head) !important; }
+        body { background-color: var(--bg-color); color: var(--text-main); transition: background 0.5s ease, color 0.5s ease; -webkit-tap-highlight-color: transparent; }
         
+        .glass-card { 
+            background: var(--card-bg); 
+            backdrop-filter: blur(12px); 
+            border: var(--card-border); 
+            transition: all 0.5s ease;
+        }
+
+        h1, h2, h3 { font-family: var(--font-head) !important; }
+
+        /* Ortak Stiller */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--accent-color); border-radius: 10px; }
-
         .task-checkbox:checked + span { text-decoration: line-through; opacity: 0.5; }
         .btn-pop:active { transform: scale(0.95); }
         .hidden-area { display: none !important; }
+
+        /* Giriş Ekranı */
         #loginScreen { position: fixed; inset: 0; background: #000000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
 
-        .roadmap-item { transition: all 0.3s ease; border-left: 4px solid transparent; }
-        .roadmap-item.active { border-left-color: var(--accent-color); background-color: var(--accent-light); }
-        .roadmap-item.completed { opacity: 0.5; }
-
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
-        .calendar-day:hover { background: var(--accent-light); }
-        .calendar-day.selected { background: var(--accent-color); color: var(--btn-text); }
-        .calendar-day.today { border: 2px solid var(--accent-color); }
-        .calendar-day.other-month { opacity: 0.3; }
-
-        @media (orientation: landscape) { .main-grid { grid-template-columns: 1fr 1fr; } .timer-section { min-height: auto; } }
+        /* Yatay Mod */
+        @media (orientation: landscape) {
+            .main-grid { grid-template-columns: 1fr 1fr; }
+            .timer-section { min-height: auto; }
+        }
     </style>
 </head>
 <body class="text-gray-700 min-h-screen flex flex-col items-center p-4 sm:p-6 pb-20">
 
+    <!-- ARKA PLAN SES HİLESİ (Safari Fix için burada duruyor) -->
     <audio id="silentAudio" loop>
         <source src="data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//oeAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjkxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASCC8iEAAAAA//oeZAAAAABzsAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//" type="audio/mpeg">
     </audio>
 
-    <!-- 1. GİRİŞ EKRANI -->
+    <!-- 1. GİRİŞ EKRANI (NETFLIX STYLE) -->
     <div id="loginScreen">
         <h1 class="text-white font-sans text-3xl mb-12 tracking-[0.2em] font-light">KİM ÇALIŞIYOR?</h1>
         <div class="flex gap-8">
+            <!-- Beyza Profil -->
             <div onclick="window.app.selectProfile('beyza')" class="group cursor-pointer flex flex-col items-center gap-4 transition-transform hover:scale-105">
                 <div class="w-36 h-36 rounded-2xl bg-pink-100 border-4 border-transparent group-hover:border-white transition-all flex items-center justify-center relative overflow-hidden shadow-2xl">
                     <i class="fa-solid fa-user-doctor text-6xl text-pink-500"></i>
                     <!-- Online Dot -->
                     <div id="loginDotBeyza" class="hidden absolute top-3 right-3 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
                 </div>
-                <div class="text-center"><span class="text-gray-400 group-hover:text-white font-bold text-xl block">Beyza</span><span class="text-xs text-gray-500 font-mono" id="statBeyza">...</span></div>
+                <div class="text-center">
+                    <span class="text-gray-400 group-hover:text-white font-bold text-xl block">Beyza</span>
+                    <span class="text-xs text-gray-500 font-mono" id="statBeyza">Yükleniyor...</span>
+                </div>
             </div>
+
+            <!-- Mirza Profil -->
             <div onclick="window.app.selectProfile('mirza')" class="group cursor-pointer flex flex-col items-center gap-4 transition-transform hover:scale-105">
                 <div class="w-36 h-36 rounded-2xl bg-[#111] border-4 border-transparent group-hover:border-white transition-all flex items-center justify-center relative overflow-hidden shadow-2xl">
                     <i class="fa-solid fa-graduation-cap text-6xl text-white"></i>
                     <!-- Online Dot -->
                     <div id="loginDotMirza" class="hidden absolute top-3 right-3 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-900 animate-pulse"></div>
                 </div>
-                <div class="text-center"><span class="text-gray-400 group-hover:text-white font-bold text-xl block">Mirza</span><span class="text-xs text-gray-500 font-mono" id="statMirza">...</span></div>
+                <div class="text-center">
+                    <span class="text-gray-400 group-hover:text-white font-bold text-xl block">Mirza</span>
+                    <span class="text-xs text-gray-500 font-mono" id="statMirza">Yükleniyor...</span>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- 2. ANA UYGULAMA -->
     <div id="appContainer" class="w-full max-w-6xl hidden-area animate-fade-in-up">
+        
+        <!-- Header -->
         <header class="w-full flex flex-col items-center mb-4 mt-2">
+            <!-- Profil Değiştir & Başlık -->
             <div class="relative w-full flex justify-center items-center mb-2">
                 <div class="absolute left-0 flex flex-col gap-1">
-                    <button onclick="window.app.logout()" class="text-xs opacity-50 hover:opacity-100 flex items-center gap-1" style="color: var(--text-main)"><i class="fa-solid fa-chevron-left"></i> Çıkış</button>
+                    <button onclick="window.app.logout()" class="text-xs opacity-50 hover:opacity-100 flex items-center gap-1" style="color: var(--text-main)">
+                        <i class="fa-solid fa-chevron-left"></i> Çıkış
+                    </button>
                     <!-- Rakip Durumu -->
-                    <div id="rivalStatus" class="text-[10px] font-bold hidden flex items-center gap-1 opacity-80" style="color: var(--accent-color)">
-                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> <span id="rivalName">...</span> Çalışıyor
+                    <div id="rivalStatus" class="hidden flex items-center gap-2 bg-green-100/10 px-3 py-1 rounded-full border border-green-500/20 shadow-sm animate-pulse">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        </span>
+                        <span id="rivalName" class="text-[10px] font-bold" style="color: var(--text-main)">...</span>
                     </div>
                 </div>
-                <h1 class="text-5xl sm:text-6xl font-bold tracking-wide" style="color: var(--accent-color)"><i id="headerIcon" class="fa-solid fa-stethoscope mr-2 text-4xl"></i><span id="headerTitle">Dr. Beyza TUS</span></h1>
+                <h1 class="text-5xl sm:text-6xl font-bold tracking-wide" style="color: var(--accent-color)">
+                    <i id="headerIcon" class="fa-solid fa-stethoscope mr-2 text-4xl"></i><span id="headerTitle">Dr. Beyza TUS</span>
+                </h1>
             </div>
+
             <div class="flex gap-3 flex-wrap justify-center">
-                <div class="glass-card px-5 py-2 rounded-full shadow-sm text-sm border font-semibold flex items-center gap-2" style="color: var(--accent-color); border-color: var(--card-border)"><i class="fa-regular fa-clock"></i><span id="countdownDisplay" class="font-bold ml-1">...</span></div>
-                <button id="openNotesBtn" class="glass-card px-5 py-2 rounded-full shadow-sm text-sm border font-semibold flex items-center gap-2 hover:opacity-80 transition-opacity" style="color: var(--text-main); border-color: var(--card-border)"><i class="fa-solid fa-book-medical"></i> Notlarım</button>
-                <a href="https://kunduz.com/u/student/counseling/" target="_blank" id="kunduzBtn" class="hidden glass-card px-5 py-2 rounded-full shadow-sm text-sm border font-bold flex items-center gap-2 hover:scale-105 transition-transform bg-white text-black border-none"><img src="https://kunduz.com/favicon.ico" class="w-4 h-4" alt="Kunduz"> Kunduz</a>
+                <div class="glass-card px-5 py-2 rounded-full shadow-sm text-sm border font-semibold flex items-center gap-2" style="color: var(--accent-color); border-color: var(--card-border)">
+                    <i class="fa-regular fa-clock"></i>
+                    Hedef: <span id="countdownDisplay" class="font-bold ml-1">...</span>
+                </div>
+                
+                <button id="openNotesBtn" class="glass-card px-5 py-2 rounded-full shadow-sm text-sm border font-semibold flex items-center gap-2 hover:opacity-80 transition-opacity" style="color: var(--text-main); border-color: var(--card-border)">
+                    <i class="fa-solid fa-book-medical"></i> Notlarım
+                </button>
+
+                <!-- KUNDUZ BUTONU (Sadece Mirza'da) -->
+                <a href="https://kunduz.com/u/student/counseling/" target="_blank" id="kunduzBtn" class="hidden glass-card px-5 py-2 rounded-full shadow-sm text-sm border font-bold flex items-center gap-2 hover:scale-105 transition-transform bg-white text-black border-none">
+                    <img src="https://kunduz.com/favicon.ico" class="w-4 h-4" alt="Kunduz"> Kunduz
+                </a>
             </div>
         </header>
 
+        <!-- Main Grid -->
         <main class="grid grid-cols-1 lg:grid-cols-2 gap-6 main-grid">
+            
+            <!-- LEFT COLUMN: Timer & Stats -->
             <div class="space-y-6">
+                <!-- TIMER CARD -->
                 <div class="glass-card rounded-[2.5rem] p-6 shadow-xl relative overflow-hidden flex flex-col items-center justify-center min-h-[280px] timer-section">
                     <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-current to-transparent opacity-50" style="color: var(--accent-color)"></div>
-                    <div id="modeBadge" class="mb-2 px-4 py-1 rounded-full text-sm font-bold uppercase tracking-widest hidden" style="background: var(--accent-light); color: var(--accent-color)">ÇALIŞMA MODU</div>
-                    <div class="text-7xl sm:text-9xl font-bold tracking-wider mb-6 drop-shadow-sm tabular-nums" id="timerDisplay" style="color: var(--text-main)">00:00</div>
+                    
+                    <div id="modeBadge" class="mb-2 px-4 py-1 rounded-full text-sm font-bold uppercase tracking-widest hidden" style="background: var(--accent-light); color: var(--accent-color)">
+                        ÇALIŞMA MODU
+                    </div>
+
+                    <div class="text-7xl sm:text-9xl font-bold tracking-wider mb-6 drop-shadow-sm tabular-nums" id="timerDisplay" style="color: var(--text-main)">
+                        00:00
+                    </div>
+                    
                     <div class="flex items-center gap-4">
-                        <button id="stopTimerBtn" class="hidden w-12 h-12 rounded-full bg-red-500 text-white flex items-center justify-center transition-all hover:scale-105" title="Bitir"><i class="fa-solid fa-stop"></i></button>
-                        <button id="toggleTimerBtn" class="btn-pop group relative inline-flex items-center justify-center px-10 py-3 font-bold text-xl transition-all duration-300 rounded-full focus:outline-none shadow-lg hover:-translate-y-1" style="background-color: var(--btn-bg); color: var(--btn-text)"><span id="btnIcon" class="mr-3"><i class="fa-solid fa-play"></i></span><span id="btnText">Başlat</span></button>
+                        <button id="stopTimerBtn" class="hidden w-12 h-12 rounded-full bg-red-500 text-white flex items-center justify-center transition-all hover:scale-105" title="Bitir">
+                            <i class="fa-solid fa-stop"></i>
+                        </button>
+                        <!-- BUTON STİLİ -->
+                        <button id="toggleTimerBtn" class="btn-pop group relative inline-flex items-center justify-center px-10 py-3 font-bold text-xl transition-all duration-300 rounded-full focus:outline-none shadow-lg hover:-translate-y-1" style="background-color: var(--btn-bg); color: var(--btn-text)">
+                            <span id="btnIcon" class="mr-3"><i class="fa-solid fa-play"></i></span>
+                            <span id="btnText">Başlat</span>
+                        </button>
                     </div>
                 </div>
+
+                <!-- Stats & Chart -->
                 <div class="glass-card rounded-[2rem] p-6 shadow-lg">
-                    <div class="flex justify-between items-end mb-2"><h3 class="text-xl font-bold" style="color: var(--accent-color)">Günlük İstatistik</h3><span id="currentDateDisplay" class="text-sm opacity-60">...</span></div>
+                    <!-- HEADER: İstatistik -->
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xl font-bold" style="color: var(--accent-color)">Günlük İstatistik</h3>
+                        <span id="currentDateDisplay" class="text-sm opacity-60">...</span>
+                    </div>
+                    
                     <div class="grid grid-cols-2 gap-4 mt-2 mb-2">
+                        <!-- Hedef -->
                         <div class="p-3 rounded-2xl text-center border flex flex-col justify-center" style="border-color: var(--card-border); background: var(--accent-light)">
                             <p class="text-xs uppercase font-bold tracking-wider mb-1 opacity-70">Hedef</p>
-                            <div class="flex items-center justify-center"><input type="number" id="targetInput" class="w-12 text-center bg-transparent text-xl font-bold focus:outline-none" value="8" style="color: var(--accent-color)"><span class="text-sm font-bold ml-1" style="color: var(--accent-color)">saat</span></div>
+                            <div class="flex items-center justify-center">
+                                <input type="number" id="targetInput" class="w-12 text-center bg-transparent text-xl font-bold focus:outline-none" value="8" style="color: var(--accent-color)">
+                                <span class="text-sm font-bold ml-1" style="color: var(--accent-color)">saat</span>
+                            </div>
                         </div>
+                        <!-- Gerçekleşen -->
                         <div class="p-3 rounded-2xl text-center border relative flex flex-col justify-center" style="border-color: var(--card-border); background: var(--accent-light)">
                             <p class="text-xs uppercase font-bold tracking-wider mb-1 opacity-70">Gerçekleşen</p>
-                            <p class="text-lg font-bold tabular-nums flex items-center justify-center" id="formattedWorkedTime" style="color: var(--accent-color)">0 sa 0 dk <span class="text-xs ml-1 opacity-70">00 sn</span></p>
+                            <p class="text-lg font-bold tabular-nums flex items-center justify-center" id="formattedWorkedTime" style="color: var(--accent-color)">
+                                0 sa 0 dk <span class="text-xs ml-1 opacity-70">00 sn</span>
+                            </p>
                             <p id="percentageText" class="text-xs font-bold mt-1 opacity-80" style="color: var(--accent-color)">%0 Hedefe Ulaşıldı</p>
                             <div id="workingIndicator" class="hidden absolute top-3 right-3 w-2 h-2 rounded-full animate-ping" style="background-color: var(--accent-color)"></div>
                         </div>
                     </div>
-                    <div class="w-full rounded-full h-2.5 overflow-hidden mb-4" style="background: rgba(0,0,0,0.1)"><div id="progressBar" class="h-2.5 rounded-full transition-all duration-700 ease-out" style="width: 0%; background-color: var(--accent-color)"></div></div>
-                    <div class="h-48 w-full relative"><canvas id="weeklyChart"></canvas></div>
+
+                    <!-- Progress -->
+                    <div class="w-full rounded-full h-2.5 overflow-hidden mb-4" style="background: rgba(0,0,0,0.1)">
+                        <div id="progressBar" class="h-2.5 rounded-full transition-all duration-700 ease-out" style="width: 0%; background-color: var(--accent-color)"></div>
+                    </div>
+
+                    <!-- Chart -->
+                    <div class="h-48 w-full relative">
+                        <canvas id="weeklyChart"></canvas>
+                    </div>
                 </div>
             </div>
+
+            <!-- RIGHT COLUMN: Tasks & Plan -->
             <div class="space-y-6">
+                <!-- Navigation -->
                 <div class="glass-card rounded-[2rem] p-4 shadow-md grid grid-cols-[auto_1fr_auto] gap-2 items-center">
                     <button id="prevDay" class="w-10 h-10 rounded-full hover:opacity-70 transition-all" style="background: var(--card-bg); color: var(--text-muted)"><i class="fa-solid fa-chevron-left"></i></button>
                     <div class="flex gap-2 justify-center">
-                        <div class="text-center cursor-pointer hover:opacity-70 px-4 py-2 rounded-2xl transition-all" id="openCalendarBtn"><h3 id="selectedDateHeader" class="font-bold text-lg leading-none" style="color: var(--text-main)">Bugün</h3><div class="text-xs font-semibold" id="selectedDateSub" style="color: var(--accent-color)">...</div></div>
-                        <button id="openRoadmapBtn" class="flex flex-col items-center justify-center px-4 py-2 rounded-2xl hover:opacity-70 transition-all" style="background: var(--accent-light)"><i class="fa-solid fa-map text-lg" style="color: var(--accent-color)"></i><span class="text-[10px] font-bold uppercase tracking-wide mt-1" style="color: var(--accent-color)">Plan</span></button>
+                        <div class="text-center cursor-pointer hover:opacity-70 px-4 py-2 rounded-2xl transition-all" id="openCalendarBtn">
+                            <h3 id="selectedDateHeader" class="font-bold text-lg leading-none" style="color: var(--text-main)">Bugün</h3>
+                            <div class="text-xs font-semibold" id="selectedDateSub" style="color: var(--accent-color)">...</div>
+                        </div>
+                        <button id="openRoadmapBtn" class="flex flex-col items-center justify-center px-4 py-2 rounded-2xl hover:opacity-70 transition-all" style="background: var(--accent-light)">
+                            <i class="fa-solid fa-map text-lg" style="color: var(--accent-color)"></i>
+                            <span class="text-[10px] font-bold uppercase tracking-wide mt-1" style="color: var(--accent-color)">Plan</span>
+                        </button>
                     </div>
                     <button id="nextDay" class="w-10 h-10 rounded-full hover:opacity-70 transition-all" style="background: var(--card-bg); color: var(--text-muted)"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
+
+                <!-- Tasks -->
                 <div class="glass-card rounded-[2rem] p-8 shadow-xl min-h-[400px] flex flex-col">
-                    <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-2xl" style="color: var(--text-main)">Görevler</h3><span id="taskCount" class="text-xs px-2 py-1 rounded font-bold" style="background: var(--accent-light); color: var(--accent-color)">0</span></div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-2xl" style="color: var(--text-main)">Görevler</h3>
+                        <span id="taskCount" class="text-xs px-2 py-1 rounded font-bold" style="background: var(--accent-light); color: var(--accent-color)">0</span>
+                    </div>
                     <div class="flex gap-2 mb-4">
                         <input type="text" id="newTaskInput" placeholder="Yeni görev ekle..." class="flex-1 bg-transparent border-b p-2 focus:outline-none text-sm" style="border-color: var(--text-muted); color: var(--text-main)">
-                        <button id="addTaskBtn" class="w-10 h-10 rounded-full shadow-lg transition-all flex items-center justify-center transform hover:-translate-y-1" style="background-color: var(--accent-color); color: var(--icon-color);"><i class="fa-solid fa-plus"></i></button>
+                        <button id="addTaskBtn" class="w-10 h-10 rounded-full shadow-lg transition-all flex items-center justify-center transform hover:-translate-y-1" style="background-color: var(--accent-color); color: var(--icon-color);">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
                     </div>
-                    <ul id="taskList" class="flex-1 space-y-2 overflow-y-auto max-h-[400px] pr-2 custom-scroll"><li class="text-center text-sm mt-10 opacity-50">Veriler yükleniyor...</li></ul>
+                    <ul id="taskList" class="flex-1 space-y-2 overflow-y-auto max-h-[400px] pr-2 custom-scroll">
+                        <li class="text-center text-sm mt-10 opacity-50">Veriler yükleniyor...</li>
+                    </ul>
                 </div>
             </div>
         </main>
@@ -194,13 +295,23 @@
     <!-- Notes Modal -->
     <div id="notesModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
         <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl h-[85vh] m-4 flex flex-col overflow-hidden" style="background: var(--card-bg); color: var(--text-main)">
-            <div class="p-6 border-b flex justify-between items-center" style="border-color: var(--card-border)"><h3 class="font-bold text-2xl">Notlarım</h3><button id="closeNotes" class="w-8 h-8 rounded-full hover:bg-red-500 hover:text-white transition-colors text-red-400"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="p-6 border-b flex justify-between items-center" style="border-color: var(--card-border)">
+                <h3 class="font-bold text-2xl">Notlarım</h3>
+                <button id="closeNotes" class="w-8 h-8 rounded-full hover:bg-red-500 hover:text-white transition-colors text-red-400"><i class="fa-solid fa-xmark"></i></button>
+            </div>
             <div class="p-4 border-b" style="border-color: var(--card-border); background: var(--accent-light)">
-                <div class="flex gap-2 mb-2"><input type="text" id="noteTitleInput" placeholder="Not adı..." class="flex-1 p-2 rounded-xl border focus:outline-none text-sm text-black"><label class="px-4 py-2 rounded-xl cursor-pointer shadow-md transition-all text-white flex items-center gap-2" style="background-color: var(--accent-color)"><i class="fa-solid fa-camera"></i> Ekle <input type="file" id="noteFileInput" accept="image/*" class="hidden"></label></div>
+                <div class="flex gap-2 mb-2">
+                    <input type="text" id="noteTitleInput" placeholder="Not adı..." class="flex-1 p-2 rounded-xl border focus:outline-none text-sm text-black">
+                    <label class="px-4 py-2 rounded-xl cursor-pointer shadow-md transition-all text-white flex items-center gap-2" style="background-color: var(--accent-color)">
+                        <i class="fa-solid fa-camera"></i> Ekle <input type="file" id="noteFileInput" accept="image/*" class="hidden">
+                    </label>
+                </div>
                 <div id="uploadProgress" class="hidden w-full bg-gray-200 rounded-full h-1"><div class="h-1 rounded-full" style="width: 0%; background: var(--accent-color)"></div></div>
                 <input type="text" id="noteSearchInput" placeholder="Ara..." class="w-full mt-2 p-2 rounded-lg border text-sm focus:outline-none text-black">
             </div>
-            <div class="flex-1 overflow-y-auto p-4 custom-scroll"><div id="notesGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-4"></div></div>
+            <div class="flex-1 overflow-y-auto p-4 custom-scroll">
+                <div id="notesGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-4"></div>
+            </div>
         </div>
     </div>
 
@@ -255,7 +366,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, onValue, push, update, remove, increment, set, get, onDisconnect } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-        // 🔥 FIREBASE AYARLARI 🔥
+        // 🔥 FIREBASE CONFIG (KENDİ BİLGİLERİNİ KONTROL ET) 🔥
         const firebaseConfig = {
             apiKey: "AIzaSyB4hWpRAQe5QXsN2ZjQ-q8aaLSxE3ESJU8",
             authDomain: "beyzatussayac-25cf4.firebaseapp.com",
@@ -268,93 +379,135 @@
         };
 
         let app, db;
-        try { app = initializeApp(firebaseConfig); db = getDatabase(app); } catch (e) { console.error(e); }
+        try { 
+            app = initializeApp(firebaseConfig); 
+            db = getDatabase(app); 
+        } 
+        catch (e) { console.error(e); alert("Firebase Hatası! Console'u kontrol et."); }
 
-        // --- GLOBAL STATE ---
-        const state = {
-            currentUser: null, 
-            timer: { minutes: 0, seconds: 0, isRunning: false, intervalId: null, mode: 'work' },
-            today: new Date(),
-            viewDate: null,
-            stats: { worked: 0, target: 8 },
-            targetDate: null,
-            roadmap: []
+        if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Hata:', err))); }
+
+        // --- UTILS ---
+        const getLocalISODate = (d) => {
+            const date = (d instanceof Date && !isNaN(d)) ? d : new Date();
+            const offset = date.getTimezoneOffset();
+            const local = new Date(date.getTime() - (offset * 60 * 1000));
+            return local.toISOString().split('T')[0];
+        };
+        const formatTimePretty = (m) => { const h = Math.floor(m/60); const min = m%60; return h>0 ? `${h} sa ${min} dk` : `${min} dk`; };
+        const formatShortDate = (d) => new Date(d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+        const formatDisplayDate = (d) => new Date(d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
+        const getTurkishMonthName = (m) => ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][m];
+        const getRandomMsg = (list) => list[Math.floor(Math.random() * list.length)];
+
+        // --- COUNTDOWN LOGIC (Moved to Top Scope) ---
+        const updateCountdown = () => {
+            if (!state.targetDate) return;
+            const now = new Date();
+            const diff = state.targetDate - now;
+
+            if (diff <= 0) {
+                els.countdownDisplay.innerText = "BAŞARILAR!";
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            els.countdownDisplay.innerText = `${days} Gün ${hours} Saat`;
         };
 
-        // --- DOM ELEMENTS ---
+        // --- MEDIA SESSION & NOTIFICATIONS ---
+        const silentAudio = document.getElementById('silentAudio');
+        let wakeLock = null;
+        const requestWakeLock = async () => { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) { console.log(err); } };
+        const updateLockScreen = (timeLeft, mode) => {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({ title: `Kalan: ${timeLeft}`, artist: mode === 'work' ? "Ders Çalışıyor 🧠" : "Mola ☕", album: "Dr. Beyza TUS", artwork: [{ src: 'icon.png', sizes: '512x512', type: 'image/png' }] });
+                navigator.mediaSession.playbackState = "playing";
+            }
+        };
+        const requestNotificationPermission = async () => { if (!("Notification" in window)) return; if (Notification.permission === "default") await Notification.requestPermission(); };
+        const sendNotification = (title, body) => { if (Notification.permission === "granted") new Notification(title, { body: body, icon: "icon.png", tag: "tus-camp" }); };
+        const workDoneMessages = ["Harikasın Doktor! 🩺", "Bu azimle TUS derecesi geliyor! 🌟", "Dinlenme zamanı. ☕", "Beyin kasların gelişiyor! 🧠"];
+        const breakDoneMessages = ["Mola bitti! Hadi masanın başına. 🚀", "Yeterince dinlendik! ⚡", "Uzmanlık seni bekliyor!", "Başlıyoruz! ⏳"];
+
+        // STATE
+        const loadState = () => { const saved = localStorage.getItem('tusState'); return saved ? JSON.parse(saved) : { timer: { minutes: 0, seconds: 0, isRunning: false, isPaused: false, mode: 'idle', secondsBuffered: 0, sessionSeconds: 0, pausedAt: null, endTime: null }, flags: { morningSent: false, nightSent: false, inactiveWarnSent: false } }; };
+        const state = { viewDate: getLocalISODate(), today: getLocalISODate(), ...loadState(), stats: { worked: 0, target: 8 }, calendar: { month: new Date().getMonth(), year: new Date().getFullYear() }, roadmap: [] };
+        const saveState = () => localStorage.setItem('tusState', JSON.stringify({ timer: state.timer, flags: state.flags }));
+
+        // ELEMENTS
         const els = {
             login: document.getElementById('loginScreen'), app: document.getElementById('appContainer'),
             timer: document.getElementById('timerDisplay'), toggle: document.getElementById('toggleTimerBtn'),
             stop: document.getElementById('stopTimerBtn'), statBeyza: document.getElementById('statBeyza'),
             statMirza: document.getElementById('statMirza'), kunduz: document.getElementById('kunduzBtn'),
             header: document.getElementById('headerTitle'), headerIcon: document.getElementById('headerIcon'), audio: document.getElementById('silentAudio'),
-            countdownDisplay: document.getElementById('countdownDisplay'), currentDateDisplay: document.getElementById('currentDateDisplay'),
-            selectedDateHeader: document.getElementById('selectedDateHeader'), selectedDateSub: document.getElementById('selectedDateSub'),
-            modeBadge: document.getElementById('modeBadge'), workingIndicator: document.getElementById('workingIndicator'),
+            countdownDisplay: document.getElementById('countdownDisplay'),
+            setupModal: document.getElementById('timerSetupModal'), actionModal: document.getElementById('actionModal'),
+            calendarModal: document.getElementById('calendarModal'), roadmapModal: document.getElementById('roadmapModal'),
+            notesModal: document.getElementById('notesModal'),
+            noteTitle: document.getElementById('noteTitleInput'), noteFile: document.getElementById('noteFileInput'), notesGrid: document.getElementById('notesGrid'), noteSearch: document.getElementById('noteSearchInput'), uploadProgress: document.getElementById('uploadProgress'),
             formattedTime: document.getElementById('formattedWorkedTime'), percentageText: document.getElementById('percentageText'),
             progressBar: document.getElementById('progressBar'), targetInput: document.getElementById('targetInput'),
             taskList: document.getElementById('taskList'), newTaskInput: document.getElementById('newTaskInput'), addTaskBtn: document.getElementById('addTaskBtn'), taskCount: document.getElementById('taskCount'),
-            setupModal: document.getElementById('timerSetupModal'), actionModal: document.getElementById('actionModal'),
-            calendarModal: document.getElementById('calendarModal'), roadmapModal: document.getElementById('roadmapModal'), notesModal: document.getElementById('notesModal'),
-            calendarGrid: document.getElementById('calendarGrid'), calMonthYear: document.getElementById('calMonthYear'),
-            noteTitle: document.getElementById('noteTitleInput'), noteFile: document.getElementById('noteFileInput'), notesGrid: document.getElementById('notesGrid'), noteSearch: document.getElementById('noteSearchInput'), uploadProgress: document.getElementById('uploadProgress'),
-            roadmapList: document.getElementById('roadmapList'), mirzaRoadmapInput: document.getElementById('mirzaRoadmapInput'),
-            newPlanTitle: document.getElementById('newPlanTitle'), newPlanDays: document.getElementById('newPlanDays'), addPlanBtn: document.getElementById('addPlanBtn'),
+            selectedDateHeader: document.getElementById('selectedDateHeader'), selectedDateSub: document.getElementById('selectedDateSub'),
             tabWork: document.getElementById('tabWork'), tabBreak: document.getElementById('tabBreak'), workOptions: document.getElementById('workOptions'), breakOptions: document.getElementById('breakOptions'),
             closeSetup: document.getElementById('closeSetup'), openCalendarBtn: document.getElementById('openCalendarBtn'), closeCalendar: document.getElementById('closeCalendar'),
             openRoadmapBtn: document.getElementById('openRoadmapBtn'), closeRoadmap: document.getElementById('closeRoadmap'), jumpToTodayBtn: document.getElementById('jumpToTodayBtn'),
             prevDay: document.getElementById('prevDay'), nextDay: document.getElementById('nextDay'), calPrevMonth: document.getElementById('calPrevMonth'), calNextMonth: document.getElementById('calNextMonth'),
             openNotesBtn: document.getElementById('openNotesBtn'), closeNotes: document.getElementById('closeNotes'),
+            roadmapList: document.getElementById('roadmapList'), mirzaRoadmapInput: document.getElementById('mirzaRoadmapInput'),
+            newPlanTitle: document.getElementById('newPlanTitle'), newPlanDays: document.getElementById('newPlanDays'), addPlanBtn: document.getElementById('addPlanBtn'),
             loginDotBeyza: document.getElementById('loginDotBeyza'), loginDotMirza: document.getElementById('loginDotMirza'), rivalStatus: document.getElementById('rivalStatus'), rivalName: document.getElementById('rivalName')
         };
 
-        // --- UTILS ---
-        const getLocalISODate = (d = new Date()) => { const o = d.getTimezoneOffset(); const l = new Date(d.getTime() - (o * 60 * 1000)); return l.toISOString().split('T')[0]; };
-        const formatTimePretty = (m) => { const h = Math.floor(m/60); const min = m%60; return h>0 ? `${h} sa ${min} dk` : `${min} dk`; };
-        const formatShortDate = (d) => new Date(d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
-        const formatDisplayDate = (d) => new Date(d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
-        const getTurkishMonthName = (m) => ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][m];
-
-        // --- INIT LOGIN ---
-        state.viewDate = getLocalISODate();
-        const initLogin = async () => {
-            const getAverage = async (user) => {
-                let total = 0; const bp = user === 'beyza' ? 'tus_camp_data' : `tus_camp_data/users/${user}`;
-                for (let i=0; i<7; i++) {
-                    const d = new Date(); d.setDate(d.getDate()-i); const ds = getLocalISODate(d);
-                    const snap = await get(ref(db, `${bp}/${ds}/stats/workedMinutes`));
-                    if(snap.exists()) total += snap.val();
-                }
-                return "Ort: " + (total/7/60).toFixed(1) + " sa/gün";
-            };
-            try {
-                els.statBeyza.innerText = await getAverage('beyza');
-                els.statMirza.innerText = await getAverage('mirza');
-                restoreTimerState(); // Auto Resume
-            } catch(e) { console.log(e); }
+        // --- CHART JS (FIXED) ---
+        let weeklyChartInstance = null;
+        const initChart = () => {
+            const ctx = document.getElementById('weeklyChart').getContext('2d');
+            if (weeklyChartInstance) { weeklyChartInstance.destroy(); }
+            weeklyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: 'Çalışma (Saat)', data: [], backgroundColor: 'rgba(236, 72, 153, 0.6)', borderColor: 'rgba(236, 72, 153, 1)', borderWidth: 1, borderRadius: 6 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 8, title: { display: true, text: 'Saat' } } }, plugins: { legend: { display: false } } }
+            });
         };
-        initLogin();
+        
+        // GRAFİK GÜNCELLEME
+        const updateChart = async () => {
+            const labels = []; const data = []; const promises = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(); d.setDate(d.getDate() - i);
+                const dateStr = getLocalISODate(d);
+                labels.push(d.toLocaleDateString('tr-TR', { weekday: 'short' }));
+                const p = get(ref(db, `${getUserPath(true)}/${dateStr}/stats/workedMinutes`)).then(snap => snap.exists() ? (snap.val()/60).toFixed(1) : 0);
+                promises.push(p);
+            }
+            const results = await Promise.all(promises);
+            if (weeklyChartInstance) { weeklyChartInstance.data.labels = labels; weeklyChartInstance.data.datasets[0].data = results; weeklyChartInstance.update(); }
+        };
 
         // --- ONLINE PRESENCE ---
         const initPresence = (currentUser) => {
-            // Ben Online'ım
             const myPresenceRef = ref(db, `presence/${currentUser}`);
             set(myPresenceRef, { online: true, lastSeen: Date.now() });
             onDisconnect(myPresenceRef).remove();
 
-            // Rakibi İzle
             const rival = currentUser === 'beyza' ? 'mirza' : 'beyza';
             onValue(ref(db, `presence/${rival}`), (snap) => {
                 const val = snap.val();
                 if(val && val.online) {
                     els.rivalStatus.classList.remove('hidden');
                     els.rivalName.innerText = rival === 'beyza' ? "Beyza" : "Mirza";
+                    document.getElementById('currentDateDisplay').style.display = 'none';
                 } else {
                     els.rivalStatus.classList.add('hidden');
+                    document.getElementById('currentDateDisplay').style.display = 'block';
                 }
             });
         };
-        // Giriş Ekranındaki Işıklar
+        
         onValue(ref(db, 'presence'), (snap) => {
             const val = snap.val() || {};
             if(val.beyza && val.beyza.online) els.loginDotBeyza.classList.remove('hidden'); else els.loginDotBeyza.classList.add('hidden');
@@ -366,7 +519,7 @@
             selectProfile: (user, autoResume = false) => {
                 state.currentUser = user;
                 if(!autoResume) els.audio.play().catch(() => {});
-                initPresence(user); // Online durumunu aç
+                initPresence(user);
 
                 if (user === 'mirza') {
                     document.documentElement.setAttribute('data-theme', 'mirza');
@@ -406,26 +559,33 @@
             quickAction: (mode) => {
                 els.actionModal.classList.add('hidden'); window.app.switchTab(mode); els.setupModal.classList.remove('hidden');
             },
-            logout: () => { localStorage.removeItem('tusTimerState'); remove(ref(db, `presence/${state.currentUser}`)); window.location.reload(); },
+            logout: () => {
+                localStorage.removeItem('tusTimerState');
+                remove(ref(db, `presence/${state.currentUser}`));
+                window.location.reload(); 
+            },
             deleteNote: (key) => { if(confirm("Silmek istiyor musun?")) remove(ref(db, getNotePath() + `/${key}`)); },
             delTask: (key) => remove(ref(db, `${getUserPath(state.viewDate)}/todos/${key}`)),
             delPlan: (idx) => remove(ref(db, `tus_camp_data/users/mirza/roadmap/${idx}`))
         };
 
-        const getUserPath = (dateStr = null) => {
-            const date = dateStr || state.viewDate || getLocalISODate();
-            return state.currentUser === 'beyza' ? `tus_camp_data/${date}` : `tus_camp_data/users/mirza/${date}`;
+        const getUserPath = (rootOnly = false) => {
+            const dateStr = rootOnly ? '' : `/${state.viewDate || getLocalISODate()}`;
+            const base = state.currentUser === 'beyza' ? `tus_camp_data` : `tus_camp_data/users/mirza`;
+            return base + dateStr;
         };
         const getNotePath = () => state.currentUser === 'beyza' ? `tus_camp_data/notes` : `tus_camp_data/users/mirza/notes`;
 
-        // --- TIMER & PERSISTENCE ---
+        // --- TIMER ---
         const saveTimerState = () => { localStorage.setItem('tusTimerState', JSON.stringify({ ...state.timer, timestamp: Date.now(), currentUser: state.currentUser })); };
         const restoreTimerState = () => {
             const saved = JSON.parse(localStorage.getItem('tusTimerState'));
             if (saved && saved.currentUser && saved.isRunning) {
                 window.app.selectProfile(saved.currentUser, true);
                 const elapsed = Math.floor((Date.now() - saved.timestamp) / 1000);
-                if(saved.mode === 'break') { /* Mola mantığı */ } else {
+                if(saved.mode === 'break') { 
+                     state.timer = saved;
+                } else {
                     let total = (saved.minutes * 60) + saved.seconds - elapsed;
                     if(total > 0) {
                         state.timer.minutes = Math.floor(total / 60); state.timer.seconds = total % 60; state.timer.mode = saved.mode;
@@ -448,8 +608,9 @@
                 } else { state.timer.seconds--; }
                 
                 if (state.timer.seconds === 0 && state.timer.mode === 'work') {
-                    const todayPath = state.currentUser === 'beyza' ? `tus_camp_data/${getLocalISODate()}` : `tus_camp_data/users/mirza/${getLocalISODate()}`;
-                    update(ref(db, `${todayPath}/stats`), { workedMinutes: increment(1) });
+                    const todayStr = getLocalISODate();
+                    const path = state.currentUser === 'beyza' ? `tus_camp_data/${todayStr}` : `tus_camp_data/users/mirza/${todayStr}`;
+                    update(ref(db, `${path}/stats`), { workedMinutes: increment(1) });
                 }
                 updateTimerDisplay(); saveTimerState();
             }, 1000);
@@ -468,7 +629,7 @@
         els.toggle.addEventListener('click', () => {
             if(state.timer.isRunning) {
                 clearInterval(state.timer.intervalId); state.timer.isRunning = false; els.toggle.innerText = "Devam Et";
-                saveTimerState(); // Pause state saved
+                saveTimerState(); 
             } else {
                 if(state.timer.minutes > 0 || state.timer.seconds > 0) runTimer();
                 else els.setupModal.classList.remove('hidden');
@@ -483,36 +644,9 @@
             }
         });
 
-        // --- DATA LOADING & CHART ---
-        let chartInstance;
-        const initChart = () => {
-            const ctx = document.getElementById('weeklyChart').getContext('2d');
-            chartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: [], datasets: [{ label: 'Saat', data: [], backgroundColor: 'rgba(236, 72, 153, 0.5)', borderRadius: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 8 }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
-            });
-        };
-        initChart();
-
-        const updateChart = async () => {
-            const labels = []; const data = [];
-            const basePath = state.currentUser === 'beyza' ? 'tus_camp_data' : `tus_camp_data/users/mirza`;
-            for (let i = 6; i >= 0; i--) {
-                const d = new Date(); d.setDate(d.getDate() - i); const dateStr = getLocalISODate(d);
-                labels.push(d.toLocaleDateString('tr-TR', { weekday: 'short' }));
-                const snap = await get(ref(db, `${basePath}/${dateStr}/stats/workedMinutes`));
-                data.push(snap.exists() ? (snap.val()/60).toFixed(1) : 0);
-            }
-            if(chartInstance) {
-                chartInstance.data.labels = labels; chartInstance.data.datasets[0].data = data;
-                chartInstance.data.datasets[0].backgroundColor = state.currentUser === 'mirza' ? 'rgba(255,255,255,0.5)' : 'rgba(219, 39, 119, 0.5)';
-                chartInstance.update();
-            }
-        };
-
+        // --- DATA LOADING ---
         const loadUserData = () => {
-            const path = getUserPath(state.viewDate);
+            const path = getUserPath();
             onValue(ref(db, `${path}/stats`), (snap) => {
                 const val = snap.val() || {}; const mins = val.workedMinutes || 0; state.stats.target = val.targetHours || 8;
                 els.formattedTime.innerHTML = `${Math.floor(mins/60)} sa ${mins%60} dk <span class="text-xs ml-1 opacity-70">00 sn</span>`;
@@ -529,60 +663,22 @@
                     li.innerHTML = `<input type="checkbox" ${todo.completed ? 'checked' : ''} class="mr-3 task-checkbox"><span class="flex-1 ${todo.completed ? 'line-through opacity-50' : ''}">${todo.text}</span><button onclick="window.app.delTask('${key}')" class="text-red-400 text-xs">Sil</button>`;
                     li.querySelector('input').addEventListener('change', (e) => update(ref(db, `${path}/todos/${key}`), { completed: e.target.checked }));
                     els.taskList.appendChild(li);
-                }); els.taskCount.innerText = count;
+                });
+                els.taskCount.innerText = count;
             });
             els.targetInput.onchange = (e) => update(ref(db, `${path}/stats`), { targetHours: +e.target.value });
         };
 
-        // Navigation
-        const changeDate = (dateInput) => {
-            const dateStr = typeof dateInput === 'string' ? dateInput : getLocalISODate(dateInput);
-            state.viewDate = dateStr;
-            const viewD = new Date(dateStr + 'T00:00:00');
-            const todayStr = getLocalISODate();
-            if (dateStr === todayStr) els.selectedDateHeader.innerText = "Bugün";
-            else {
-                const diff = Math.round((viewD - new Date(todayStr + 'T00:00:00')) / (1000 * 60 * 60 * 24));
-                if (diff === -1) els.selectedDateHeader.innerText = "Dün"; else if (diff === 1) els.selectedDateHeader.innerText = "Yarın"; else els.selectedDateHeader.innerText = viewD.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
-            }
-            els.selectedDateSub.innerText = formatDisplayDate(viewD);
-            loadUserData();
-        };
-
-        // Roadmap
-        const BEYZA_FIXED_ROADMAP = [ { title: "Anatomi - Kadın Doğum - Fizyoloji", days: 10, completed: false }, { title: "Farmakoloji", days: 6, completed: false }, { title: "Dahiliye - Patoloji", days: 5, completed: false }, { title: "Pediatri - Mikro", days: 5, completed: false }, { title: "Genel Cer - Biyokimya", days: 4, completed: false }, { title: "Kadın Doğum - Fizyoloji - Anatomi", days: 4, completed: false }, { title: "Küçük Stajlar - Farma", days: 3, completed: false }, { title: "Dahiliye - Patoloji", days: 5, completed: false }, { title: "Pediatri - Mikro", days: 5, completed: false }, { title: "Genel Cer - Biyokimya", days: 4, completed: false }, { title: "Kadın Doğum - Fizyoloji (Anatomi)", days: 4, completed: false }, { title: "Küçük Stajlar - Farma", days: 3, completed: false }, { title: "Patoloji - Mikro", days: 4, completed: false }, { title: "Dahiliye - Pedi", days: 4, completed: false }, { title: "Pediatri - Genel Cerh", days: 3, completed: false }, { title: "Biyokimya", days: 2, completed: false }, { title: "Anatomi", days: 1, completed: false }, { title: "Farma", days: 2, completed: false } ];
-        const loadRoadmap = () => {
-            if (state.currentUser === 'beyza') { state.roadmap = BEYZA_FIXED_ROADMAP; renderRoadmap(); } 
-            else { onValue(ref(db, 'tus_camp_data/users/mirza/roadmap'), (snap) => { state.roadmap = snap.val() || []; renderRoadmap(); }); }
-        };
-        const renderRoadmap = () => {
-            els.roadmapList.innerHTML = ""; let cur = new Date("2024-12-31"); 
-            state.roadmap.forEach((item, idx) => { 
-                let end = new Date(cur); end.setDate(end.getDate() + parseInt(item.days) - 1); 
-                const active = checkIfActive(cur, end); 
-                const li = document.createElement('li'); 
-                li.className = `roadmap-item flex items-center gap-4 p-4 rounded-2xl shadow-sm border ${item.completed ? 'completed' : ''} ${active ? 'active' : ''}`;
-                li.style.background = state.currentUser === 'mirza' ? '#1a1a1a' : 'white'; li.style.borderColor = state.currentUser === 'mirza' ? '#333' : '#f3f4f6';
-                const dis = state.currentUser === 'beyza' ? 'disabled' : '';
-                li.innerHTML = `<div class="flex flex-col items-center justify-center w-14 text-center"><span class="text-xs font-bold" style="color: var(--text-muted)">${formatShortDate(cur)}</span><div class="h-4 w-0.5 my-1 rounded-full" style="background: var(--accent-light)"></div><span class="text-xs font-bold" style="color: var(--accent-color)">${formatShortDate(end)}</span></div><div class="flex-1"><h4 class="font-bold text-sm sm:text-base leading-tight" style="color: var(--text-main)">${item.title}</h4><p class="text-xs mt-1" style="color: var(--text-muted)">${item.days} Gün</p></div><div class="flex flex-col gap-1"><input type="checkbox" class="w-6 h-6 rounded-lg" ${item.completed ? 'checked' : ''} ${dis}>${!dis ? `<button onclick="window.app.delPlan(${idx})" class="text-red-500 text-xs">Sil</button>` : ''}</div>`; 
-                if (!dis) li.querySelector('input').addEventListener('change', (e) => update(ref(db, `tus_camp_data/users/mirza/roadmap/${idx}`), { completed: e.target.checked })); 
-                els.roadmapList.appendChild(li); cur = new Date(end); cur.setDate(cur.getDate() + 1); 
-            }); 
-        };
-        const checkIfActive = (s, e) => { const n = new Date(); n.setHours(0,0,0,0); const st = new Date(s); st.setHours(0,0,0,0); const en = new Date(e); en.setHours(0,0,0,0); return n >= st && n <= e; };
-        
-        els.addPlanBtn.addEventListener('click', () => { const t = els.newPlanTitle.value; const d = els.newPlanDays.value; if (t && d) { const idx = state.roadmap.length; update(ref(db, `tus_camp_data/users/mirza/roadmap/${idx}`), { title: t, days: parseInt(d), completed: false }); els.newPlanTitle.value = ""; els.newPlanDays.value = ""; } });
-        window.app.delPlan = (idx) => remove(ref(db, `tus_camp_data/users/mirza/roadmap/${idx}`));
-
-        // Listeners
-        const updateCountdown = () => { if (!state.targetDate) return; const now = new Date(); const diff = state.targetDate - now; if (diff <= 0) { els.countdownDisplay.innerText = "BAŞARILAR!"; return; } const days = Math.floor(diff / 86400000); const hours = Math.floor((diff % 86400000) / 3600000); els.countdownDisplay.innerText = `${days} Gün ${hours} Saat`; }; setInterval(updateCountdown, 60000);
-        const compressImage = (f) => new Promise((res, rej) => { const r = new FileReader(); r.readAsDataURL(f); r.onload = e => { const i = new Image(); i.src = e.target.result; i.onload = () => { const c = document.createElement('canvas'); const x = c.getContext('2d'); const s = 800/i.width; c.width=800; c.height=i.height*s; x.drawImage(i,0,0,c.width,c.height); res(c.toDataURL('image/jpeg',0.7)); }; }; r.onerror=rej; });
+        // Notes
+        const compressImage = (file) => new Promise((res, rej) => { const r = new FileReader(); r.readAsDataURL(file); r.onload = e => { const i = new Image(); i.src = e.target.result; i.onload = () => { const c = document.createElement('canvas'); const x = c.getContext('2d'); const s = 800/i.width; c.width=800; c.height=i.height*s; x.drawImage(i,0,0,c.width,c.height); res(c.toDataURL('image/jpeg',0.7)); }; }; r.onerror=rej; });
         const uploadNote = async (e) => { const f = e.target.files[0]; if(!f) return; document.getElementById('uploadProgress').classList.remove('hidden'); try { const b = await compressImage(f); await push(ref(db, getNotePath()), { title: els.noteTitle.value||"Adsız", image: b, createdAt: Date.now() }); els.noteTitle.value=""; document.getElementById('uploadProgress').classList.add('hidden'); } catch(e){console.log(e);} };
-        
         document.getElementById('openNotesBtn').addEventListener('click', () => { els.notesModal.classList.remove('hidden'); onValue(ref(db, getNotePath()), (s) => { const n = s.val(); els.notesGrid.innerHTML = ""; if(!n) return; Object.entries(n).reverse().forEach(([k, i]) => { const d = document.createElement('div'); d.className = "p-2 rounded-xl border flex flex-col " + (state.currentUser==='mirza'?'bg-[#1a1a1a] border-[#333]':'bg-white border-gray-100'); d.innerHTML = `<img src="${i.image}" class="w-full h-32 object-cover rounded-lg mb-2" onclick="window.open('${i.image}')"><h4 class="font-bold text-sm truncate" style="color:var(--text-main)">${i.title}</h4><button onclick="window.app.deleteNote('${k}')" class="text-xs text-red-400 text-right w-full mt-1">Sil</button>`; els.notesGrid.appendChild(d); }); }); });
         document.getElementById('closeNotes').addEventListener('click', () => els.notesModal.classList.add('hidden')); els.noteFile.addEventListener('change', uploadNote);
         els.noteSearch.addEventListener('input', (e) => { const v = e.target.value.toLowerCase(); document.querySelectorAll('#notesGrid > div').forEach(c => { c.style.display = c.querySelector('h4').innerText.toLowerCase().includes(v) ? 'flex' : 'none'; }); });
-        
+
+        // Calendar & Roadmap
+        const renderCal = (m, y) => { const grid = document.getElementById('calendarGrid'); document.getElementById('calMonthYear').innerText = new Date(y, m).toLocaleDateString('tr-TR', {month:'long', year:'numeric'}); grid.innerHTML = ""; const fd = new Date(y, m, 1).getDay() || 7; const ld = new Date(y, m+1, 0).getDate(); for(let i=1; i<fd; i++) els.calendarGrid.appendChild(document.createElement('div')); for(let d=1; d<=ld; d++) { const ds = getLocalISODate(new Date(y, m, d)); const el = document.createElement('div'); el.className = `calendar-day ${ds===state.today?'today':''} ${ds===state.viewDate?'selected':''}`; el.innerText = d; el.onclick = () => { changeDate(ds); els.calendarModal.classList.add('hidden'); }; els.calendarGrid.appendChild(el); } };
+        const changeDate = (d) => { state.viewDate = d; els.selectedDateHeader.innerText = d===state.today ? "Bugün" : "Geçmiş"; els.selectedDateSub.innerText = formatDisplayDate(d); loadUserData(); };
         document.getElementById('openCalendarBtn').addEventListener('click', () => { els.calendarModal.classList.remove('hidden'); renderCal(state.calendar.month, state.calendar.year); });
         document.getElementById('closeCalendar').addEventListener('click', () => els.calendarModal.classList.add('hidden'));
         document.getElementById('openRoadmapBtn').addEventListener('click', () => { els.roadmapModal.classList.remove('hidden'); loadRoadmap(); });
@@ -594,9 +690,18 @@
         document.getElementById('calNextMonth').addEventListener('click', () => { state.calendar.month++; if(state.calendar.month>11){state.calendar.month=0;state.calendar.year++} renderCal(state.calendar.month, state.calendar.year); });
         document.getElementById('closeSetup').addEventListener('click', () => els.setupModal.classList.add('hidden'));
 
-        // Calendar Render
-        const renderCal = (m, y) => { const grid = document.getElementById('calendarGrid'); document.getElementById('calMonthYear').innerText = `${getTurkishMonthName(m)} ${y}`; grid.innerHTML = ""; const fd = new Date(y, m, 1).getDay() || 7; const ld = new Date(y, m+1, 0).getDate(); for(let i=1; i<fd; i++) els.calendarGrid.appendChild(document.createElement('div')); for(let d=1; d<=ld; d++) { const ds = getLocalISODate(new Date(y, m, d)); const el = document.createElement('div'); el.className = `calendar-day ${ds===getLocalISODate(state.today)?'today':''} ${ds===state.viewDate?'selected':''}`; el.innerText = d; el.onclick = () => { changeDate(ds); els.calendarModal.classList.add('hidden'); }; els.calendarGrid.appendChild(el); } };
+        // Roadmap Data
+        const BEYZA_FIXED_ROADMAP = [ { title: "Anatomi - Kadın Doğum - Fizyoloji", days: 10, completed: false }, { title: "Farmakoloji", days: 6, completed: false }, { title: "Dahiliye - Patoloji", days: 5, completed: false }, { title: "Pediatri - Mikro", days: 5, completed: false }, { title: "Genel Cer - Biyokimya", days: 4, completed: false }, { title: "Kadın Doğum - Fizyoloji - Anatomi", days: 4, completed: false }, { title: "Küçük Stajlar - Farma", days: 3, completed: false }, { title: "Dahiliye - Patoloji", days: 5, completed: false }, { title: "Pediatri - Mikro", days: 5, completed: false }, { title: "Genel Cer - Biyokimya", days: 4, completed: false }, { title: "Kadın Doğum - Fizyoloji (Anatomi)", days: 4, completed: false }, { title: "Küçük Stajlar - Farma", days: 3, completed: false }, { title: "Patoloji - Mikro", days: 4, completed: false }, { title: "Dahiliye - Pedi", days: 4, completed: false }, { title: "Pediatri - Genel Cerh", days: 3, completed: false }, { title: "Biyokimya", days: 2, completed: false }, { title: "Anatomi", days: 1, completed: false }, { title: "Farma", days: 2, completed: false } ];
+        const loadRoadmap = () => { if (state.currentUser === 'beyza') { state.roadmap = BEYZA_FIXED_ROADMAP; renderRoadmap(); } else { onValue(ref(db, 'tus_camp_data/users/mirza/roadmap'), (snap) => { state.roadmap = snap.val() || []; renderRoadmap(); }); } };
+        const renderRoadmap = () => { els.roadmapList.innerHTML = ""; let cur = state.currentUser === 'beyza' ? new Date("2024-12-31") : new Date(); state.roadmap.forEach((item, idx) => { let end = new Date(cur); end.setDate(end.getDate() + parseInt(item.days) - 1); const active = checkIfActive(cur, end); const li = document.createElement('li'); li.className = `roadmap-item flex items-center gap-4 p-4 rounded-2xl shadow-sm border ${item.completed ? 'completed' : ''} ${active ? 'active' : ''}`; li.style.background = state.currentUser === 'mirza' ? '#1a1a1a' : 'white'; li.style.borderColor = state.currentUser === 'mirza' ? '#333' : '#f3f4f6'; const dis = state.currentUser === 'beyza' ? 'disabled' : ''; li.innerHTML = `<div class="flex flex-col items-center justify-center w-14 text-center"><span class="text-xs font-bold" style="color: var(--text-muted)">${formatShortDate(cur)}</span><div class="h-4 w-0.5 my-1 rounded-full" style="background: var(--accent-light)"></div><span class="text-xs font-bold" style="color: var(--accent-color)">${formatShortDate(end)}</span></div><div class="flex-1"><h4 class="font-bold text-sm sm:text-base leading-tight" style="color: var(--text-main)">${item.title}</h4><p class="text-xs mt-1" style="color: var(--text-muted)">${item.days} Gün</p></div><div class="flex flex-col gap-1"><input type="checkbox" class="w-6 h-6 rounded-lg" ${item.completed ? 'checked' : ''} ${dis}>${!dis ? `<button onclick="window.app.delPlan(${idx})" class="text-red-500 text-xs">Sil</button>` : ''}</div>`; if (!dis) li.querySelector('input').addEventListener('change', (e) => update(ref(db, `tus_camp_data/users/mirza/roadmap/${idx}`), { completed: e.target.checked })); els.roadmapList.appendChild(li); cur = new Date(end); cur.setDate(cur.getDate() + 1); }); };
+        const checkIfActive = (s, e) => { const n = new Date(); n.setHours(0,0,0,0); const st = new Date(s); st.setHours(0,0,0,0); const en = new Date(e); en.setHours(0,0,0,0); return n >= st && n <= e; };
         
+        els.addPlanBtn.addEventListener('click', () => { const t = els.newPlanTitle.value; const d = els.newPlanDays.value; if (t && d) { const idx = state.roadmap.length; update(ref(db, `tus_camp_data/users/mirza/roadmap/${idx}`), { title: t, days: parseInt(d), completed: false }); els.newPlanTitle.value = ""; els.newPlanDays.value = ""; } });
+        window.app.delPlan = (idx) => remove(ref(db, `tus_camp_data/users/mirza/roadmap/${idx}`));
+
+        // Her dakika güncelleme
+        setInterval(updateCountdown, 60000);
+
         initChart();
     </script>
 </body>
